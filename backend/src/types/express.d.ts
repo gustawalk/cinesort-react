@@ -2,7 +2,10 @@ import "express";
 
 declare module "express" {
   interface Request {
-    user?: any;
+    user?: {
+      id: string;
+      name: string;
+    };
   }
 }
 

@@ -2,11 +2,7 @@ import { Request, Response } from "express";
 import { getUserLists } from "@/services/user.service";
 
 export const userLists = async (req: Request, res: Response) => {
-  const user = (req as any).user;
-
-  console.log("-=-=-=-= JWT DATA =-=-=-=-=")
-  console.log(user)
-  console.log("fim header")
+  const user = req.user;
 
   if (!user) {
     return res.status(500).json({ message: "User data missing from request" });
