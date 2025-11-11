@@ -9,6 +9,8 @@ pnpm-debug.log*
 dist/
 build/
 
+todo.txt
+
 # Environment files
 .env
 .env.*.local

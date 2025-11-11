@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@types/redis':
+        specifier: ^4.0.11
+        version: 4.0.11
       bcryptjs:
         specifier: ^3.0.3
         version: 3.0.3
@@ -23,6 +26,9 @@ importers:
       mysql2:
         specifier: ^3.15.3
         version: 3.15.3
+      redis:
+        specifier: ^5.9.0
+        version: 5.9.0
     devDependencies:
       '@types/cors':
         specifier: ^2.8.19
@@ -64,6 +70,34 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.9':
     resolution: {integrity: sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ==}
+
+  '@redis/bloom@5.9.0':
+    resolution: {integrity: sha512-W9D8yfKTWl4tP8lkC3MRYkMz4OfbuzE/W8iObe0jFgoRmgMfkBV+Vj38gvIqZPImtY0WB34YZkX3amYuQebvRQ==}
+    engines: {node: '>= 18'}
+    peerDependencies:
+      '@redis/client': ^5.9.0
+
+  '@redis/client@5.9.0':
+    resolution: {integrity: sha512-EI0Ti5pojD2p7TmcS7RRa+AJVahdQvP/urpcSbK/K9Rlk6+dwMJTQ354pCNGCwfke8x4yKr5+iH85wcERSkwLQ==}
+    engines: {node: '>= 18'}
+
+  '@redis/json@5.9.0':
+    resolution: {integrity: sha512-Bm2jjLYaXdUWPb9RaEywxnjmzw7dWKDZI4MS79mTWPV16R982jVWBj6lY2ZGelJbwxHtEVg4/FSVgYDkuO/MxA==}
+    engines: {node: '>= 18'}
+    peerDependencies:
+      '@redis/client': ^5.9.0
+
+  '@redis/search@5.9.0':
+    resolution: {integrity: sha512-jdk2csmJ29DlpvCIb2ySjix2co14/0iwIT3C0I+7ZaToXgPbgBMB+zfEilSuncI2F9JcVxHki0YtLA0xX3VdpA==}
+    engines: {node: '>= 18'}
+    peerDependencies:
+      '@redis/client': ^5.9.0
+
+  '@redis/time-series@5.9.0':
+    resolution: {integrity: sha512-W6ILxcyOqhnI7ELKjJXOktIg3w4+aBHugDbVpgVLPZ+YDjObis1M0v7ZzwlpXhlpwsfePfipeSK+KWNuymk52w==}
+    engines: {node: '>= 18'}
+    peerDependencies:
+      '@redis/client': ^5.9.0
 
   '@tsconfig/node10@1.0.11':
     resolution: {integrity: sha512-DcRjDCujK/kCk/cUe8Xz8ZSpm8mS3mNNpta+jGCA6USEDfktlNvm1+IuZ9eTcDbNk41BHwpHHeW+N1lKCz4zOw==}
@@ -112,6 +146,10 @@ packages:
 
   '@types/range-parser@1.2.7':
     resolution: {integrity: sha512-hKormJbkJqzQGhziax5PItDUTMAM9uE2XXQmM37dyd4hVM+5aVl7oVxMVUiVQn2oCQFN/LKCZdvSM0pFRqbSmQ==}
+
+  '@types/redis@4.0.11':
+    resolution: {integrity: sha512-bI+gth8La8Wg/QCR1+V1fhrL9+LZUSWfcqpOj2Kc80ZQ4ffbdL173vQd5wovmoV9i071FU9oP2g6etLuEwb6Rg==}
+    deprecated: This is a stub types definition. redis provides its own type definitions, so you do not need this installed.
 
   '@types/send@0.17.6':
     resolution: {integrity: sha512-Uqt8rPBE8SY0RK8JB1EzVOIZ32uqy8HwdxCnoCOsYrvnswqmFZ/k+9Ikidlk/ImhsdvBsloHbAlewb2IEBV/Og==}
@@ -195,6 +233,10 @@ packages:
   chokidar@3.6.0:
     resolution: {integrity: sha512-7VT13fmjotKpGipCW9JEQAusEPE+Ei8nl6/g4FBAmIm0GOOLMua9NDDo/DWp0ZAxCr3cPq5ZpBqmPAQgDda2Pw==}
     engines: {node: '>= 8.10.0'}
+
+  cluster-key-slot@1.1.2:
+    resolution: {integrity: sha512-RMr0FhtfXemyinomL4hrWcYJxmX6deFdCxpJzhDttxgO1+bcCnkk+9drydLVDmAMG7NE6aN/fl4F7ucU/90gAA==}
+    engines: {node: '>=0.10.0'}
 
   concat-map@0.0.1:
     resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
@@ -547,6 +589,10 @@ packages:
     resolution: {integrity: sha512-hOS089on8RduqdbhvQ5Z37A0ESjsqz6qnRcffsMU3495FuTdqSm+7bhJ29JvIOsBDEEnan5DPu9t3To9VRlMzA==}
     engines: {node: '>=8.10.0'}
 
+  redis@5.9.0:
+    resolution: {integrity: sha512-E8dQVLSyH6UE/C9darFuwq4usOPrqfZ1864kI4RFbr5Oj9ioB9qPF0oJMwX7s8mf6sPYrz84x/Dx1PGF3/0EaQ==}
+    engines: {node: '>= 18'}
+
   resolve@1.22.11:
     resolution: {integrity: sha512-RfqAvLnMl313r7c9oclB1HhUEAezcpLjz95wFH4LVuhk9JF/r22qmVP9AMmOU4vMX7Q8pN8jwNg/CSpdFnMjTQ==}
     engines: {node: '>= 0.4'}
@@ -726,6 +772,26 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
+  '@redis/bloom@5.9.0(@redis/client@5.9.0)':
+    dependencies:
+      '@redis/client': 5.9.0
+
+  '@redis/client@5.9.0':
+    dependencies:
+      cluster-key-slot: 1.1.2
+
+  '@redis/json@5.9.0(@redis/client@5.9.0)':
+    dependencies:
+      '@redis/client': 5.9.0
+
+  '@redis/search@5.9.0(@redis/client@5.9.0)':
+    dependencies:
+      '@redis/client': 5.9.0
+
+  '@redis/time-series@5.9.0(@redis/client@5.9.0)':
+    dependencies:
+      '@redis/client': 5.9.0
+
   '@tsconfig/node10@1.0.11': {}
 
   '@tsconfig/node12@1.0.11': {}
@@ -778,6 +844,10 @@ snapshots:
   '@types/qs@6.14.0': {}
 
   '@types/range-parser@1.2.7': {}
+
+  '@types/redis@4.0.11':
+    dependencies:
+      redis: 5.9.0
 
   '@types/send@0.17.6':
     dependencies:
@@ -874,6 +944,8 @@ snapshots:
       readdirp: 3.6.0
     optionalDependencies:
       fsevents: 2.3.3
+
+  cluster-key-slot@1.1.2: {}
 
   concat-map@0.0.1: {}
 
@@ -1215,6 +1287,14 @@ snapshots:
   readdirp@3.6.0:
     dependencies:
       picomatch: 2.3.1
+
+  redis@5.9.0:
+    dependencies:
+      '@redis/bloom': 5.9.0(@redis/client@5.9.0)
+      '@redis/client': 5.9.0
+      '@redis/json': 5.9.0(@redis/client@5.9.0)
+      '@redis/search': 5.9.0(@redis/client@5.9.0)
+      '@redis/time-series': 5.9.0(@redis/client@5.9.0)
 
   resolve@1.22.11:
     dependencies:

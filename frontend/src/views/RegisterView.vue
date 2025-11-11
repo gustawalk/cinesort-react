@@ -85,7 +85,7 @@ const handleRegister = async () => {
     return;
   }
 
-  let response = await fetch("http://localhost:6700/api/register", {
+  let response = await fetch("/api/register", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"

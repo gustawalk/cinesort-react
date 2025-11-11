@@ -5,6 +5,8 @@ import { validateEmail } from "@/utils/email";
 
 type LoginResult = | { status: "ok", user: User } | { status: "notfound" } | { status: "error", message: string, code?: number }
 
+// TODO: TIPAR O RETORNO DO BANCO DE DADOS PRA NAO USAR (row as any[])
+
 export const loginUser = async (username: string, password: string): Promise<LoginResult> => {
   try {
     let [rows] = await pool.query("SELECT * FROM usuarios WHERE nome_user = ?", [username]);
@@ -13,13 +15,14 @@ export const loginUser = async (username: string, password: string): Promise<Log
       return { status: "notfound" }
     }
 
-    const user: User = (rows as any[])[0];
-
+    const user = (rows as any[])[0];
     const password_check = await compareHashPassword(password, user.senha_user);
 
     if (!password_check) {
       return { status: "notfound" }
     }
+
+    delete user.senha_user;
 
     return {
       status: "ok",
@@ -68,7 +71,6 @@ export const registerUser = async (username: string, email: string, password: st
       id: insertId,
       nome_user: username,
       email_user: email,
-      senha_user: hashed_password,
     }
 
     return { status: "ok", user: newUser };

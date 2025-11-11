@@ -50,11 +50,15 @@
                     {{ list.nome_lista }}
                   </option>
                 </select>
-              <Button class="bg-blue-600 hover:bg-blue-700 px-4">Create</Button>
+              <Button class="bg-blue-600 hover:bg-blue-700 px-4"
+                :onclick="handleCreate"
+              >
+                Create
+              </Button>
             </div>
             <div class="flex justify-between space-x-3">
                 <Button
-                  :onclick="draw"
+                  :onclick="handleDraw"
                   :disabled="buttonsDisabled"
                   class="bg-green-600 hover:bg-green-700 w-24 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -119,6 +123,7 @@ import { ref, reactive } from 'vue'
 import { Card, CardHeader, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import type { UserStats } from '@/types/userStats';
+import Swal from "sweetalert2";
 
 const router = useRouter();
 
@@ -177,7 +182,7 @@ const getUserLists = async () => {
       return
     }
 
-    const response = await fetch("http://localhost:6700/api/userLists", {
+    const response = await fetch("/api/userLists", {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -222,12 +227,37 @@ const getUserLists = async () => {
   }
 }
 
-const draw = () => {
-  console.warn(buttonsDisabled.value);
+const handleCreate = async () => {
+  const newListModal = await Swal.fire({
+    title: "Create a new list",
+    input: "text",
+    inputPlaceholder: "Enter your list name",
+    showCancelButton: true,
+    confirmButtonText: "Create",
+    cancelButtonText: "Cancel",
+    confirmButtonColor: "#2563eb",
+    cancelButtonColor: "#d33",
+    background: "#1c1917",
+    color: "#ffffff",
+    inputAttributes: {
+      maxlength: 50,
+      autocapitalize: "off",
+      autocorrect: "off"
+    }
+  });
+
+  if(!newListModal.isConfirmed || newListModal.value == "") {
+    return;
+  }
+
+  console.log(newListModal);
 }
 
 const handleDraw = () => {
   // TODO: handle draw by getting the selectedList.value and checking if it belongs to user
+  if(buttonsDisabled.value == true){ return }
+
+  console.log("Drawing a movie")
 }
 
 const handleSearch = () => {

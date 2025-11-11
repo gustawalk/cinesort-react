@@ -72,7 +72,7 @@ const handleLogin = async () => {
     return;
   }
 
-  let response = await fetch("http://localhost:6700/api/login", {
+  let response = await fetch("/api/login", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
