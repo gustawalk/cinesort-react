@@ -2,27 +2,61 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { decodeJwt } from 'jose'
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { MovieLink } from "@/components/utility/MovieLink";
 
-// interface UserStats {
-//   lastMovie: string,
-//   watchedMovies: number,
-//   highestRated: string,
-//   lowestRated: string
-// }
-//
+export interface UserStats {
+  lastMovie: {
+    name_movie: string;
+    id_movie: string;
+  },
+  watchedMovies: number | null,
+  highestRated: {
+    name_movie: string;
+    id_movie: string;
+  },
+  lowestRated: {
+    name_movie: string;
+    id_movie: string;
+  },
+}
+
 interface UserLists {
   id: number,
   nome_lista: string
 }
 
+
+const LoadingSpinner = () => (
+  <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-500 border-r-transparent"></div>
+);
+
+const SkeletonCard = () => (
+  <Card className="bg-stone-800 border-stone-700 rounded-xl shadow-lg animate-pulse">
+    <CardHeader>
+      <div className="h-6 bg-stone-700 rounded w-32"></div>
+    </CardHeader>
+    <CardContent>
+      <div className="space-y-3">
+        <div className="h-10 bg-stone-700 rounded"></div>
+        <div className="h-10 bg-stone-700 rounded"></div>
+        <div className="h-10 bg-stone-700 rounded"></div>
+      </div>
+    </CardContent>
+  </Card>
+);
+
+
 export default function HomeView() {
   const navigate = useNavigate();
-  const [user, setUser] = useState<any>(null)
+  const [_user, setUser] = useState<any>(null)
   const [userLists, setUserLists] = useState<UserLists[]>([])
   const [selectedList, setSelectedList] = useState<number | null>(null);
+  const [userStats, setUserStats] = useState<UserStats | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  const getUserFromToken = () => {
+
+  const getUserFromToken = useCallback(() => {
     const token = localStorage.getItem("token");
     if (!token) return null;
 
@@ -34,25 +68,54 @@ export default function HomeView() {
       console.error('Invalid token: ', err)
       return null;
     }
-  }
+  }, [])
 
-  const getUserLists = async () => {
+  const checkAuth = useCallback(() => {
+    const token = localStorage.getItem("token")
+    if (!token) {
+      navigate("/login")
+      return;
+    }
+
+    const userData = getUserFromToken();
+    if (!userData) {
+      localStorage.removeItem("token")
+      navigate("/login")
+      return
+    }
+
+    setUser(userData);
+    return token;
+  }, [navigate, getUserFromToken])
+
+  const getUserStats = useCallback(async () => {
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        navigate("/login");
-        return;
-      }
+      const token = checkAuth()
 
-      console.log("setando o user")
-      const userData = getUserFromToken();
-      setUser(userData);
+      console.log("fazendo o fetch dos stats");
 
-      if (!userData) {
-        localStorage.removeItem("token");
-        navigate("/login");
-        return;
-      }
+      const response = await fetch("/api/userStats", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+      const dataUserStats = data.user_stats;
+
+      console.log(dataUserStats)
+      setUserStats(dataUserStats);
+    } catch (err) {
+      console.log(err)
+    }
+  }, [checkAuth, navigate])
+
+  const getUserLists = useCallback(async () => {
+    try {
+      const token = checkAuth()
+      if (!token) return;
 
       console.log("fazendo o fetch")
 
@@ -70,17 +133,7 @@ export default function HomeView() {
         return;
       }
 
-      console.log("pegando o data")
-      const raw = await response.text();
-      console.log("RAW RESPONSE:", raw);
-
-      let data;
-      try {
-        data = JSON.parse(raw);
-      } catch (e) {
-        console.error("JSON inválido vindo do backend");
-        throw e;
-      }
+      const data = await response.json();
 
       if (!response.ok) {
         return
@@ -93,23 +146,26 @@ export default function HomeView() {
 
       setUserLists(lists);
 
+      console.warn(`LISTA`, userLists)
+
       if (lists.length === 0) {
-        setUserLists([
-          {
-            id: -1,
-            nome_lista: 'No Lists found'
-          }
-        ]);
+        setUserLists([{
+          id: -1,
+          nome_lista: 'No Lists found'
+        }]);
+        setSelectedList(-1);
+      } else {
+        setUserLists(lists);
+        setSelectedList(lists[0].id);
       }
 
-      setSelectedList(lists[0].id);
-      console.log(user);
+      console.log("Updated lists: ", lists)
     } catch (err) {
       console.error("Something went wrong: ", err);
       localStorage.removeItem("token");
       navigate("/login")
     }
-  }
+  }, [navigate, checkAuth])
 
   const handleCreate = async () => {
     // TODO: Implement with SweetAlert2 or custom modal
@@ -131,8 +187,57 @@ export default function HomeView() {
   }
 
   useEffect(() => {
-    getUserLists();
-  }, []);
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        await Promise.all([getUserLists(), getUserStats()]);
+      } catch (err) {
+        console.error("Error fetching data:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, [getUserLists, getUserStats]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-stone-900 text-white font-sans flex flex-col">
+        <div className="p-4">
+          <div className="h-10 w-24 bg-stone-700 rounded animate-pulse"></div>
+        </div>
+
+        <div className="flex-1 flex flex-col lg:flex-row justify-center items-start lg:items-center gap-6 px-4 py-8 lg:py-0">
+          <Card className="bg-stone-800 border-stone-700 rounded-xl shadow-lg w-full max-w-lg animate-pulse">
+            <CardHeader>
+              <div className="h-6 bg-stone-700 rounded w-48 mx-auto"></div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <div className="flex-1 h-10 bg-stone-700 rounded"></div>
+                <div className="flex gap-2">
+                  <div className="h-10 w-24 bg-stone-700 rounded"></div>
+                  <div className="h-10 w-24 bg-stone-700 rounded"></div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="flex flex-col gap-6 w-full max-w-lg lg:max-w-96">
+            <SkeletonCard />
+            <SkeletonCard />
+          </div>
+        </div>
+
+        <div className="fixed inset-0 flex items-center justify-center pointer-events-none">
+          <div className="bg-stone-800 rounded-lg p-6 shadow-2xl flex flex-col items-center gap-4">
+            <LoadingSpinner />
+            <p className="text-white text-lg font-semibold">Loading your data...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-stone-900 text-white font-sans flex flex-col">
@@ -240,25 +345,25 @@ export default function HomeView() {
               <div className="space-y-3 text-md font-bold">
                 <div className="flex justify-between">
                   <span className="text-stone-400">Last Movie</span>
-                  <span className="text-blue-400">NONE</span>
+                  <MovieLink movie={userStats?.lastMovie}></MovieLink>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-stone-400">Watched Movies</span>
-                  <span className="text-blue-400">NONE</span>
+                  <span className="text-blue-400 hover:text-blue-600">{userStats?.watchedMovies}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-stone-400">Highest Rated</span>
-                  <span className="text-blue-400">NONE</span>
+                  <MovieLink movie={userStats?.highestRated}></MovieLink>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-stone-400">Lowest Rated</span>
-                  <span className="text-blue-400">NONE</span>
+                  <MovieLink movie={userStats?.lowestRated}></MovieLink>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
       </div>
-    </div>
+    </div >
   )
 }
