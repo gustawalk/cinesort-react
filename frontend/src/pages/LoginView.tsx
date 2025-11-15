@@ -31,7 +31,7 @@ export default function LoginView() {
     }
 
     try {
-      const response = await fetch("http://localhost:6700/api/login", {
+      const response = await fetch("/api/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

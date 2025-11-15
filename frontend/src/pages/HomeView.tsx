@@ -11,14 +11,16 @@ import { useEffect, useState } from "react";
 //   lowestRated: string
 // }
 //
-// interface UserLists {
-//   id: number,
-//   nome_lista: string
-// }
+interface UserLists {
+  id: number,
+  nome_lista: string
+}
 
 export default function HomeView() {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null)
+  const [userLists, setUserLists] = useState<UserLists[]>([])
+  const [selectedList, setSelectedList] = useState<number | null>(null);
 
   const getUserFromToken = () => {
     const token = localStorage.getItem("token");
@@ -42,6 +44,7 @@ export default function HomeView() {
         return;
       }
 
+      console.log("setando o user")
       const userData = getUserFromToken();
       setUser(userData);
 
@@ -51,6 +54,55 @@ export default function HomeView() {
         return;
       }
 
+      console.log("fazendo o fetch")
+
+      const response = await fetch("/api/userLists", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        }
+      });
+
+      if (response.status === 401 || response.status === 403) {
+        localStorage.removeItem('token');
+        navigate('/login')
+        return;
+      }
+
+      console.log("pegando o data")
+      const raw = await response.text();
+      console.log("RAW RESPONSE:", raw);
+
+      let data;
+      try {
+        data = JSON.parse(raw);
+      } catch (e) {
+        console.error("JSON inválido vindo do backend");
+        throw e;
+      }
+
+      if (!response.ok) {
+        return
+      }
+
+      const lists = data.user_lists.map((l: any) => ({
+        id: l.id,
+        nome_lista: l.nome_lista
+      }))
+
+      setUserLists(lists);
+
+      if (lists.length === 0) {
+        setUserLists([
+          {
+            id: -1,
+            nome_lista: 'No Lists found'
+          }
+        ]);
+      }
+
+      setSelectedList(lists[0].id);
       console.log(user);
     } catch (err) {
       console.error("Something went wrong: ", err);
@@ -137,8 +189,15 @@ export default function HomeView() {
             <CardContent>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-4">
                 <select
+                  value={selectedList ?? ''}
+                  onChange={(e) => setSelectedList(Number(e.target.value))}
                   className="flex-1 px-3 py-2 rounded-lg bg-stone-700 text-white outline-none"
                 >
+                  {userLists.map((list) => (
+                    <option key={list.id} value={list.id}>
+                      {list.nome_lista}
+                    </option>
+                  ))}
                 </select>
                 <Button className="bg-blue-600 hover:bg-blue-700 px-4"
                   onClick={handleCreate}
