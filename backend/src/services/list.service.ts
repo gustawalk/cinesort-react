@@ -1,10 +1,13 @@
-import { User } from "@/models/user.model"
 import { List } from "@/models/list.model"
 import { pool } from "@/config/db";
 
 type ListResult = | { status: "ok", user_lists: List[] } | { status: "no_content", user_lists: any[] }
 
-export const getUserLists = async (user: User): Promise<ListResult> => {
+interface UserIdOnly {
+  id: number
+}
+
+export const getUserLists = async (user: UserIdOnly): Promise<ListResult> => {
 
   const [rows] = await pool.query(
     "SELECT * FROM listas WHERE id_user_dono = ?", [user.id]

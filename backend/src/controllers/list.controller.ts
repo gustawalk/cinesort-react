@@ -8,7 +8,7 @@ export const userLists = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "User data missing from request" });
   }
 
-  const result = await getUserLists({ id: user.id } as any);
+  const result = await getUserLists({ id: user.id });
 
   if (result.status === "ok") {
     return res.status(200).json({ user_lists: result.user_lists });

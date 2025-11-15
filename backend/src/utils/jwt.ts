@@ -1,5 +1,8 @@
 import { RequestUser } from "@/types/express";
 import jwt, { SignOptions } from "jsonwebtoken";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const JWT_SECRET = process.env.JWT_SECRET as string;
 

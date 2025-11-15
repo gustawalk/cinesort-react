@@ -22,8 +22,6 @@ export const loginUser = async (username: string, password: string): Promise<Log
       return { status: "notfound" }
     }
 
-    delete user.senha_user;
-
     return {
       status: "ok",
       user: user
