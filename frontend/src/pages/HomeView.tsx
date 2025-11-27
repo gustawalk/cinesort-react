@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { decodeJwt } from 'jose'
 import { useCallback, useEffect, useState } from "react";
 import { MovieLink } from "@/components/utility/MovieLink";
+import { MovieModal } from "@/components/utility/MovieModal";
+import type { MovieInfo } from "@/interfaces/MovieInfo";
 
 export interface UserStats {
   lastMovie: {
@@ -54,6 +56,8 @@ export default function HomeView() {
   const [selectedList, setSelectedList] = useState<number | null>(null);
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedMovie, setSelectedMovie] = useState<MovieInfo | null>(null)
 
 
   const getUserFromToken = useCallback(() => {
@@ -177,7 +181,28 @@ export default function HomeView() {
   }
 
   const handleDraw = () => {
-    console.log('Drawing a movie')
+    console.log(`Drawing from ${selectedList}`)
+    // TODO: get a real movie from the selectedList id
+    const fictionalMovie = {
+      imdb_id: "tt9999999",
+      titulo: "The Last Algorithm",
+      ano: "2024",
+      duracao: "2h 18min",
+      poster: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSEqd0iZgIixK8f2Q1jJilA5cpT1cwfdWgYoQ&s",
+      imdb_rate: "8.7"
+    }
+    setSelectedMovie(fictionalMovie);
+    setIsModalOpen(true);
+  }
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
+    setSelectedMovie(null)
+  }
+
+  const handleMovieRated = () => {
+    // TODO: handle after rating, as updating user statistics and removing pendency
+    console.log('handle after rate')
   }
 
   const handleLogout = () => {
@@ -297,6 +322,7 @@ export default function HomeView() {
                   value={selectedList ?? ''}
                   onChange={(e) => setSelectedList(Number(e.target.value))}
                   className="flex-1 px-3 py-2 rounded-lg bg-stone-700 text-white outline-none"
+                  disabled={selectedList === -1}
                 >
                   {userLists.map((list) => (
                     <option key={list.id} value={list.id}>
@@ -314,18 +340,21 @@ export default function HomeView() {
                 <Button
                   className="bg-green-600 hover:bg-green-700 flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={handleDraw}
+                  disabled={selectedList === -1}
                 >
                   Draw
                 </Button>
 
                 <Button
                   className="bg-yellow-500 hover:bg-yellow-600 flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={selectedList === -1}
                 >
                   Edit
                 </Button>
 
                 <Button
                   className="bg-red-600 hover:bg-red-700 flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={selectedList === -1}
                 >
                   Delete
                 </Button>
@@ -364,6 +393,16 @@ export default function HomeView() {
           </Card>
         </div>
       </div>
-    </div >
+
+      {/* Modal - Rendered at root level */}
+      {selectedMovie && (
+        <MovieModal
+          movie={selectedMovie}
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          onMovieRated={handleMovieRated}
+        />
+      )}
+    </div>
   )
 }
