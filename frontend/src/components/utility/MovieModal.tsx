@@ -5,14 +5,16 @@ import type { MovieInfo } from "@/interfaces/MovieInfo";
 interface MovieModalProps {
   movie: MovieInfo;
   isOpen: boolean;
+  listId: string;
   onClose: () => void;
   onMovieRated?: () => void;
 }
 
-export const MovieModal = ({ movie, isOpen, onClose, onMovieRated }: MovieModalProps) => {
+export const MovieModal = ({ movie, isOpen, listId, onClose, onMovieRated }: MovieModalProps) => {
   const [rating, setRating] = useState<number>(0);
   const modalRef = useRef<HTMLDivElement>(null);
   const displayRate = movie.imdb_rate || "??";
+  const [isStremioBtnEnabled, setIsStremioBtnEnabled] = useState<boolean>(true);
 
   useEffect(() => {
     if (isOpen && modalRef.current) {
@@ -33,7 +35,47 @@ export const MovieModal = ({ movie, isOpen, onClose, onMovieRated }: MovieModalP
   };
 
   const openStremio = () => {
-    window.open(`stremio://${encodeURIComponent(`${movie.titulo} ${movie.ano}`)}`, '_blank');
+    const query = encodeURIComponent(`${movie.titulo} ${movie.ano}`)
+    const stremio_app_url = `stremio://search?search=${query}`;
+    const stremio_web_url = `https://web.stremio.com/#/search?search=${query}`
+
+    const link = document.createElement("a");
+    link.href = stremio_app_url;
+    link.style.display = "none";
+
+    const button = document.getElementById('stremio-btn') as HTMLButtonElement;
+    if (button && isStremioBtnEnabled) {
+      setIsStremioBtnEnabled(false)
+      button.textContent = 'Opening Stremio...';
+      button.classList.add("cursor-not-allowed")
+      button.disabled = true;
+
+      const onFocus = () => {
+        window.open(stremio_web_url, '_blank')
+        window.removeEventListener('focus', onFocus);
+        if (button) {
+          button.textContent = 'Watch in Stremio';
+          button.disabled = false;
+        }
+      };
+      window.addEventListener('focus', onFocus);
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      setTimeout(() => {
+        window.removeEventListener('focus', onFocus);
+        if (document.hasFocus()) {
+          window.open(stremio_web_url, '_blank')
+        }
+        if (button) {
+          button.textContent = 'Watch in Stremio';
+          button.disabled = false;
+          setIsStremioBtnEnabled(true)
+        }
+      }, 250);
+    }
   };
 
   const handleSetAsWatched = async () => {
@@ -53,7 +95,7 @@ export const MovieModal = ({ movie, isOpen, onClose, onMovieRated }: MovieModalP
     if (result.isConfirmed) {
       try {
         // TODO: real handling the rate, sending info to backend
-        console.log("Rating with: ", rating)
+        console.log("Rating with: ", rating, " on list id: ", listId)
         onMovieRated?.();
         onClose();
       } catch (error) {
@@ -119,7 +161,7 @@ export const MovieModal = ({ movie, isOpen, onClose, onMovieRated }: MovieModalP
             <span className="font-semibold text-white">/ 10.0</span>
           </div>
 
-          <button onClick={openStremio} className="mt-2 p-2 px-5 bg-blue-600 text-white hover:bg-blue-800 transition text-lg rounded-lg">
+          <button id="stremio-btn" onClick={openStremio} className="mt-2 p-2 px-5 bg-blue-600 text-white hover:bg-blue-800 transition text-lg rounded-lg">
             Watch in Stremio
           </button>
 

@@ -400,6 +400,7 @@ export default function HomeView() {
           movie={selectedMovie}
           isOpen={isModalOpen}
           onClose={handleCloseModal}
+          listId={String(selectedList)}
           onMovieRated={handleMovieRated}
         />
       )}
