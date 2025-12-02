@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { MovieLink } from "@/components/utility/MovieLink";
 import { MovieModal } from "@/components/utility/MovieModal";
 import type { MovieInfo } from "@/interfaces/MovieInfo";
+import Swal from 'sweetalert2';
 
 export interface UserStats {
   lastMovie: {
@@ -172,12 +173,26 @@ export default function HomeView() {
   }, [navigate, checkAuth])
 
   const handleCreate = async () => {
-    // TODO: Implement with SweetAlert2 or custom modal
-    const listName = prompt('Enter your list name:')
-    if (!listName || listName.trim() === '') {
-      return
-    }
-    console.log('Creating list:', listName)
+    const { value: newListName } = await Swal.fire({
+      title: "Create a new list",
+      input: "text",
+      inputPlaceholder: "Enter your list name",
+      showCancelButton: true,
+      confirmButtonText: "Create",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#2563eb",
+      cancelButtonColor: "#d33",
+      background: "#1c1917",
+      color: "#ffffff",
+      inputAttributes: {
+        maxlength: "50",
+        autocapitalize: "off",
+        autocorrect: "off"
+      }
+    });
+
+    if (newListName.trim('') === '') return;
+    console.log('Creating list:', newListName)
   }
 
   const handleDraw = () => {
