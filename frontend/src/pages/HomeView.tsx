@@ -117,12 +117,10 @@ export default function HomeView() {
     }
   }, [checkAuth, navigate])
 
-  const getUserLists = useCallback(async () => {
+  const getUserLists = useCallback(async (selectLast: boolean = false) => {
     try {
       const token = checkAuth()
       if (!token) return;
-
-      console.log("fazendo o fetch")
 
       const response = await fetch("/api/userLists", {
         method: "GET",
@@ -161,7 +159,11 @@ export default function HomeView() {
         setSelectedList(-1);
       } else {
         setUserLists(lists);
-        setSelectedList(lists[0].id);
+        if (selectLast) {
+          setSelectedList(lists[lists.length - 1].id);
+        } else {
+          setSelectedList(lists[0].id);
+        }
       }
 
       console.log("Updated lists: ", lists)
@@ -191,8 +193,37 @@ export default function HomeView() {
       }
     });
 
+    if (newListName === undefined) return;
     if (newListName.trim('') === '') return;
+    const token = checkAuth();
+    if (!token) return;
+
     console.log('Creating list:', newListName)
+    const response = await fetch("/api/createList", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({ listName: newListName })
+    });
+
+    console.log(response)
+    if (response.status == 409) {
+      Swal.fire({
+        title: "This list already exists",
+        text: "Try putting a different name!",
+        icon: "error",
+        background: "#1c1917",
+        color: "#ffffff",
+        iconColor: "#ef4444",
+        confirmButtonText: "Ok",
+        confirmButtonColor: "#2563eb",
+      });
+      return;
+    }
+
+    getUserLists(true);
   }
 
   const handleDraw = () => {
@@ -231,6 +262,7 @@ export default function HomeView() {
       setIsLoading(true);
       try {
         await Promise.all([getUserLists(), getUserStats()]);
+        console.log("TRYING")
       } catch (err) {
         console.error("Error fetching data:", err);
       } finally {
@@ -409,7 +441,6 @@ export default function HomeView() {
         </div>
       </div>
 
-      {/* Modal - Rendered at root level */}
       {selectedMovie && (
         <MovieModal
           movie={selectedMovie}

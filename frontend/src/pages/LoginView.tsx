@@ -12,7 +12,7 @@ export default function LoginView() {
 
   const validateForm = (): boolean => {
     if (!username || !password) {
-      setError("Por favor, preencha todos os campos");
+      setError("Fields are missing");
       return false;
     }
 
