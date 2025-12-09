@@ -4,6 +4,7 @@ import { randomUUID } from "crypto";
 
 type ListResult = | { status: "ok", user_lists: List[] } | { status: "no_content", user_lists: any[] }
 type CreateResult = | { status: "created" } | { status: "conflict" }
+type DeleteResult = | { status: "deleted" }
 interface UserIdOnly {
   id: number
 }
@@ -40,6 +41,19 @@ export const createNewList = async (user_id: number, newListName: string): Promi
     )
 
     return { status: "created" }
+  } catch (err) {
+    throw err;
+  }
+}
+
+export const deleteUserList = async (list_id: number, user_id: number): Promise<DeleteResult> => {
+  console.log(user_id, list_id)
+  try {
+    await pool.query(
+      "DELETE FROM listas WHERE id = ? AND id_user_dono = ?", [list_id, user_id]
+    )
+
+    return { status: "deleted" }
   } catch (err) {
     throw err;
   }

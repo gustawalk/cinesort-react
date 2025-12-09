@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { MovieLink } from "@/components/utility/MovieLink";
 import { MovieModal } from "@/components/utility/MovieModal";
 import type { MovieInfo } from "@/interfaces/MovieInfo";
+import type { GetUserListsOptions } from "@/interfaces/GetUserListsOptions";
 import Swal from 'sweetalert2';
 
 export interface UserStats {
@@ -99,7 +100,7 @@ export default function HomeView() {
 
       console.log("fazendo o fetch dos stats");
 
-      const response = await fetch("/api/userStats", {
+      const response = await fetch("/api/user/stats", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -117,12 +118,12 @@ export default function HomeView() {
     }
   }, [checkAuth, navigate])
 
-  const getUserLists = useCallback(async (selectLast: boolean = false) => {
+  const getUserLists = useCallback(async ({ selectLastList = false }: GetUserListsOptions = {}) => {
     try {
       const token = checkAuth()
       if (!token) return;
 
-      const response = await fetch("/api/userLists", {
+      const response = await fetch("/api/list", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -147,10 +148,6 @@ export default function HomeView() {
         nome_lista: l.nome_lista
       }))
 
-      setUserLists(lists);
-
-      console.warn(`LISTA`, userLists)
-
       if (lists.length === 0) {
         setUserLists([{
           id: -1,
@@ -159,7 +156,7 @@ export default function HomeView() {
         setSelectedList(-1);
       } else {
         setUserLists(lists);
-        if (selectLast) {
+        if (selectLastList) {
           setSelectedList(lists[lists.length - 1].id);
         } else {
           setSelectedList(lists[0].id);
@@ -173,6 +170,10 @@ export default function HomeView() {
       navigate("/login")
     }
   }, [navigate, checkAuth])
+
+  const handleSearch = async () => {
+    console.log("Searching movie")
+  }
 
   const handleCreate = async () => {
     const { value: newListName } = await Swal.fire({
@@ -199,7 +200,7 @@ export default function HomeView() {
     if (!token) return;
 
     console.log('Creating list:', newListName)
-    const response = await fetch("/api/createList", {
+    const response = await fetch("/api/list", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -212,7 +213,7 @@ export default function HomeView() {
     if (response.status == 409) {
       Swal.fire({
         title: "This list already exists",
-        text: "Try putting a different name!",
+        text: "Try using a different name!",
         icon: "error",
         background: "#1c1917",
         color: "#ffffff",
@@ -223,7 +224,7 @@ export default function HomeView() {
       return;
     }
 
-    getUserLists(true);
+    getUserLists({ selectLastList: true });
   }
 
   const handleDraw = () => {
@@ -239,6 +240,41 @@ export default function HomeView() {
     }
     setSelectedMovie(fictionalMovie);
     setIsModalOpen(true);
+  }
+
+  const handleDelete = async () => {
+    console.log(`Deleting list with id: ${selectedList}`)
+
+    const token = checkAuth();
+    if (!token) return;
+
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this",
+      icon: "warning",
+      color: "#ffffff",
+      iconColor: "#c7950c",
+      showCancelButton: true,
+      background: "#1c1917",
+      confirmButtonColor: "#2563eb",
+      cancelButtonColor: "#d33"
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        console.log(`Deleted list with id: ${selectedList}`)
+        const response = await fetch("/api/list", {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({ listId: selectedList })
+        })
+
+        if (response.status === 200) {
+          getUserLists();
+        }
+      }
+    })
   }
 
   const handleCloseModal = () => {
@@ -262,7 +298,6 @@ export default function HomeView() {
       setIsLoading(true);
       try {
         await Promise.all([getUserLists(), getUserStats()]);
-        console.log("TRYING")
       } catch (err) {
         console.error("Error fetching data:", err);
       } finally {
@@ -339,7 +374,9 @@ export default function HomeView() {
                 className="flex-1 px-3 py-2 rounded-lg bg-stone-700 text-white placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <div className="flex gap-2">
-                <Button className="bg-blue-600 hover:bg-blue-700 flex-1 sm:flex-none">
+                <Button className="bg-blue-600 hover:bg-blue-700 flex-1 sm:flex-none"
+                  onClick={handleSearch}
+                >
                   Search
                 </Button>
                 <Button
@@ -402,6 +439,7 @@ export default function HomeView() {
                 <Button
                   className="bg-red-600 hover:bg-red-700 flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={selectedList === -1}
+                  onClick={handleDelete}
                 >
                   Delete
                 </Button>

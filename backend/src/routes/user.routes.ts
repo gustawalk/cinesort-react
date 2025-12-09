@@ -4,7 +4,7 @@ import { userStats } from "@/controllers/user.controller";
 
 const router: Router = Router();
 
-router.get("/userStats", authMiddleware, userStats);
+router.get("/user/stats", authMiddleware, userStats);
 
 export default router;
 
