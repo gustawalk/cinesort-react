@@ -61,7 +61,6 @@ export default function HomeView() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMovie, setSelectedMovie] = useState<MovieInfo | null>(null)
 
-
   const getUserFromToken = useCallback(() => {
     const token = localStorage.getItem("token");
     if (!token) return null;
@@ -117,6 +116,30 @@ export default function HomeView() {
       console.log(err)
     }
   }, [checkAuth, navigate])
+
+  const checkUserPendency = async () => {
+    try {
+      const token = checkAuth()
+      if (!token) return;
+
+      const response = await fetch("/api/user/pendency", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        }
+      });
+
+      if (response.status != 200) {
+        const data = await response.json();
+        setSelectedMovie(data.movie);
+        setIsModalOpen(true);
+      }
+
+    } catch (err) {
+      throw err;
+    }
+  }
 
   const getUserLists = useCallback(async ({ selectLastList = false }: GetUserListsOptions = {}) => {
     try {
@@ -227,19 +250,34 @@ export default function HomeView() {
     getUserLists({ selectLastList: true });
   }
 
-  const handleDraw = () => {
+  const handleDraw = async () => {
     console.log(`Drawing from ${selectedList}`)
-    // TODO: get a real movie from the selectedList id
-    const fictionalMovie = {
-      imdb_id: "tt9999999",
-      titulo: "The Last Algorithm",
-      ano: "2024",
-      duracao: "2h 18min",
-      poster: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSEqd0iZgIixK8f2Q1jJilA5cpT1cwfdWgYoQ&s",
-      imdb_rate: "8.7"
+    const token = checkAuth();
+    if (!token) return;
+    const response = await fetch(`/api/list/${selectedList}/draw`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      }
+    });
+
+    if (response.status == 204) {
+      Swal.fire({
+        title: "You dont have any movies in this list",
+        text: "Try adding some movie first!",
+        icon: "warning",
+        color: "#ffffff",
+        iconColor: "#c7950c",
+        background: "#1c1917",
+      })
+      return;
     }
-    setSelectedMovie(fictionalMovie);
-    setIsModalOpen(true);
+    if (response.status == 200) {
+      const data = await response.json();
+      setSelectedMovie(data.movie);
+      setIsModalOpen(true);
+    }
   }
 
   const handleDelete = async () => {
@@ -272,6 +310,19 @@ export default function HomeView() {
 
         if (response.status === 200) {
           getUserLists();
+
+          const Toast = Swal.mixin({
+            toast: true,
+            position: "top-end",
+            showConfirmButton: false,
+            timer: 3000,
+            background: "#262626",
+            color: "#ffffff"
+          });
+          Toast.fire({
+            icon: "success",
+            title: "List deleted"
+          });
         }
       }
     })
@@ -297,7 +348,7 @@ export default function HomeView() {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        await Promise.all([getUserLists(), getUserStats()]);
+        await Promise.all([getUserLists(), getUserStats(), checkUserPendency()]);
       } catch (err) {
         console.error("Error fetching data:", err);
       } finally {

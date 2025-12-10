@@ -5,8 +5,6 @@ import { validateEmail } from "@/utils/email";
 
 type LoginResult = | { status: "ok", user: User } | { status: "notfound" } | { status: "error", message: string, code?: number }
 
-// TODO: TIPAR O RETORNO DO BANCO DE DADOS PRA NAO USAR (row as any[])
-
 export const loginUser = async (username: string, password: string): Promise<LoginResult> => {
   try {
     let [rows] = await pool.query("SELECT * FROM usuarios WHERE nome_user = ?", [username]);
@@ -47,8 +45,6 @@ export const registerUser = async (username: string, email: string, password: st
       code: 400
     };
   }
-
-  // TODO: checking if already exists a account with user or email, if not, creating as a user
 
   let [rows] = await pool.query("SELECT * FROM usuarios WHERE nome_user = ? OR email_user = ?", [username, email])
 

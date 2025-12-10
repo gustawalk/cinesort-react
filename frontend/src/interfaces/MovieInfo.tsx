@@ -1,4 +1,5 @@
 export interface MovieInfo {
+  id: number,
   imdb_id: string,
   titulo: string,
   ano: string,

@@ -17,9 +17,6 @@ export const MovieModal = ({ movie, isOpen, listId, onClose, onMovieRated }: Mov
   const [isStremioBtnEnabled, setIsStremioBtnEnabled] = useState<boolean>(true);
 
   useEffect(() => {
-    if (isOpen && modalRef.current) {
-      modalRef.current.focus();
-    }
   }, [isOpen]);
 
   const handleRatingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -122,13 +119,13 @@ export const MovieModal = ({ movie, isOpen, listId, onClose, onMovieRated }: Mov
               <text
                 x="50%"
                 y="50%"
-                text-anchor="middle"
-                dominant-baseline="middle"
+                textAnchor="middle"
+                dominantBaseline="middle"
                 dy=".1em"
-                font-family="Arial, sans-serif"
-                font-size="16"
+                fontFamily="Arial, sans-serif"
+                fontSize="16"
                 fill="black"
-                font-weight="bold">
+                fontWeight="bold">
                 TMDB
               </text>
             </svg>

@@ -2,6 +2,8 @@ import { UserStats } from "@/models/userstats.model"
 import { pool } from "@/config/db";
 import { RequestUser } from "@/types/express";
 import { RowDataPacket } from "mysql2";
+import { Movie } from "@/models/movie.model";
+import { Pendency } from "@/models/pendency.model";
 
 type UserStatsResult = { status: "ok", user_stats: UserStats }
 
@@ -31,7 +33,6 @@ export const getUserStats = async (user: RequestUser): Promise<UserStatsResult> 
     `, [user.id]
   );
 
-
   const [lowestRatedRows] = await pool.query<MovieResult[]>(
     `
       SELECT name_movie, id_movie
@@ -51,12 +52,6 @@ export const getUserStats = async (user: RequestUser): Promise<UserStatsResult> 
       LIMIT 1
     `, [user.id]
   );
-
-  console.log("--------------------------------")
-  console.log(highestRatedRows)
-  console.log(lowestRatedRows)
-  console.log(lastMovieRows)
-  console.log("--------------------------------")
 
   return {
     status: "ok",
@@ -85,4 +80,28 @@ export const getUserStats = async (user: RequestUser): Promise<UserStatsResult> 
       }
     }
   };
+}
+
+type UserPendencyResult = | { status: "ok", result: "true", movie: Movie } | { status: "ok", result: "false", movie: null }
+
+export const checkUserPendency = async (user_id: number): Promise<UserPendencyResult> => {
+
+  const [rows] = await pool.query<RowDataPacket[]>(
+    "SELECT * FROM pendencias WHERE id_user_pendente = ?", [user_id]
+  )
+
+  if (rows.length === 0) {
+    return { status: "ok", result: "false", movie: null }
+  }
+
+  const pendency = rows[0] as Pendency;
+  const movie_id = pendency.filme_id_imdb;
+
+  const [movieRows] = await pool.query<RowDataPacket[]>(
+    "SELECT * FROM filmes WHERE imdb_id = ?", [movie_id]
+  )
+
+  const movie = movieRows[0] as Movie;
+
+  return { status: "ok", result: "true", movie: movie }
 }

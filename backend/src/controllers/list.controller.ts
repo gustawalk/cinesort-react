@@ -1,7 +1,5 @@
 import { Request, Response } from "express";
-import { getUserLists, createNewList, deleteUserList } from "@/services/list.service";
-
-// TODO: TROCAR OS PARAMETROS PARA UM OBJETO PARA FACILITAR LEITURA FUTURA
+import { getUserLists, createNewList, deleteUserList, drawFromList } from "@/services/list.service";
 
 type UserListsReturn = "ok" | "no_content";
 
@@ -64,6 +62,36 @@ export const createList = async (req: Request, res: Response) => {
     conflict: () => res.status(409).json({ message: "User already has a list with this name" }),
     created: () => res.status(200).json({ message: "List created succefully" }),
   };
+
+  if (responsesMap[result.status]) {
+    return responsesMap[result.status]();
+  }
+
+  return res.status(500).json({ message: "Something went wrong" })
+}
+
+type DrawStatus = "ok" | "no_content" | "pendency"
+
+export const drawList = async (req: Request, res: Response) => {
+  const user = req.user;
+
+  if (!user) {
+    return res.status(500).json({ message: "User data missing from request" });
+  }
+
+  const listIdRaw = req.params.id;
+  const listId = Number(listIdRaw)
+  if (isNaN(listId)) {
+    return res.status(400).json({ message: "Invalid list ID" });
+  }
+
+  const result = await drawFromList(listId, user.id)
+
+  const responsesMap: Record<DrawStatus, () => Response> = {
+    ok: () => res.status(200).json({ message: "Movie draw", movie: result.movie }),
+    no_content: () => res.status(204).json({ message: "No movie found in list", movie: null }),
+    pendency: () => res.status(409).json({ message: "User has a pendency", movie: null })
+  }
 
   if (responsesMap[result.status]) {
     return responsesMap[result.status]();
