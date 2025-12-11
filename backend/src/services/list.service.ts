@@ -64,9 +64,7 @@ export const createNewList = async (user_id: number, newListName: string): Promi
 }
 
 export const deleteUserList = async (list_id: number, user_id: number): Promise<DeleteResult> => {
-  console.log(user_id, list_id)
   try {
-
     // deleting all movies from that list
     await pool.query(
       `DELETE ml
@@ -91,7 +89,6 @@ export const deleteUserList = async (list_id: number, user_id: number): Promise<
 export const drawFromList = async (list_id: number, user_id: number): Promise<DrawResult> => {
   try {
     // checking pendency first
-
     if (await checkUserPendency(user_id)) {
       return { status: "pendency", movie: null }
     }

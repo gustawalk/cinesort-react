@@ -7,7 +7,7 @@ interface MovieModalProps {
   isOpen: boolean;
   listId: string;
   onClose: () => void;
-  onMovieRated?: () => void;
+  onMovieRated?: (rating: string) => void;
 }
 
 export const MovieModal = ({ movie, isOpen, listId, onClose, onMovieRated }: MovieModalProps) => {
@@ -93,7 +93,7 @@ export const MovieModal = ({ movie, isOpen, listId, onClose, onMovieRated }: Mov
       try {
         // TODO: real handling the rate, sending info to backend
         console.log("Rating with: ", rating, " on list id: ", listId)
-        onMovieRated?.();
+        onMovieRated?.(String(rating));
         onClose();
       } catch (error) {
         console.error("Error rating movie:", error);

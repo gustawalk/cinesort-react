@@ -75,6 +75,24 @@ export default function HomeView() {
     }
   }, [])
 
+  type iconTypes = | "success" | "warning"
+
+  const showToast = (icon: iconTypes, title: string) => {
+    const Toast = Swal.mixin({
+      toast: true,
+      position: "top-end",
+      showConfirmButton: false,
+      timer: 3000,
+      background: "#262626",
+      color: "#ffffff"
+    });
+    Toast.fire({
+      icon: icon,
+      title: title
+    });
+
+  }
+
   const checkAuth = useCallback(() => {
     const token = localStorage.getItem("token")
     if (!token) {
@@ -310,19 +328,7 @@ export default function HomeView() {
 
         if (response.status === 200) {
           getUserLists();
-
-          const Toast = Swal.mixin({
-            toast: true,
-            position: "top-end",
-            showConfirmButton: false,
-            timer: 3000,
-            background: "#262626",
-            color: "#ffffff"
-          });
-          Toast.fire({
-            icon: "success",
-            title: "List deleted"
-          });
+          showToast("success", "List deleted")
         }
       }
     })
@@ -333,9 +339,30 @@ export default function HomeView() {
     setSelectedMovie(null)
   }
 
-  const handleMovieRated = () => {
+  const handleMovieRated = async (rating: string) => {
     // TODO: handle after rating, as updating user statistics and removing pendency
+    const token = checkAuth();
+    if (!token) return;
+
+    console.log(selectedMovie)
+
     console.log('handle after rate')
+    const response = await fetch("/api/movie/rate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        movie: selectedMovie,
+        rate: rating
+      })
+    });
+
+    if (response.status === 200) {
+      getUserStats();
+      showToast("success", "Movie rated")
+    }
   }
 
   const handleLogout = () => {

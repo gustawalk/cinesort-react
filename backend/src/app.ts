@@ -2,6 +2,7 @@ import express, { Express } from "express";
 import userRoutes from "@/routes/user.routes";
 import authRoutes from "@/routes/auth.routes";
 import listRoutes from "@/routes/list.routes";
+import movieRoutes from "@/routes/movie.routes";
 import cors from "cors";
 
 const app: Express = express();
@@ -14,5 +15,6 @@ app.use(cors({
 app.use("/api", authRoutes);
 app.use("/api", userRoutes);
 app.use("/api", listRoutes);
+app.use("/api", movieRoutes);
 
 export default app;

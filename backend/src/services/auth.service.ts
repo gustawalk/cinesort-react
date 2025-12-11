@@ -36,8 +36,6 @@ export const loginUser = async (username: string, password: string): Promise<Log
 type RegisterResult = | { status: "ok", user: User } | { status: "exists" } | { status: "error", message: string, code?: number }
 
 export const registerUser = async (username: string, email: string, password: string): Promise<RegisterResult> => {
-  console.log(username, email, password);
-
   if (!validateEmail(email)) {
     return {
       status: "error",
