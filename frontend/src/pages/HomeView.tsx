@@ -8,6 +8,7 @@ import { MovieModal } from "@/components/utility/MovieModal";
 import type { MovieInfo } from "@/interfaces/MovieInfo";
 import type { GetUserListsOptions } from "@/interfaces/GetUserListsOptions";
 import Swal from 'sweetalert2';
+import { preloadModule } from "react-dom";
 
 export interface UserStats {
   lastMovie: {
@@ -23,6 +24,13 @@ export interface UserStats {
     name_movie: string;
     id_movie: string;
   },
+}
+
+interface MovieSearchResult {
+  title: string;
+  year: string;
+  link: string;
+  image: string;
 }
 
 interface UserLists {
@@ -60,6 +68,10 @@ export default function HomeView() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMovie, setSelectedMovie] = useState<MovieInfo | null>(null)
+  const [searchValue, setSearchValue] = useState<string>("");
+  const [searchResult, setSearchResult] = useState<MovieSearchResult[]>([])
+  const [isLoadingSearch, setIsLoadingSearch] = useState<boolean>(false);
+  const [imagesLoaded, setImagesLoaded] = useState<boolean>(false);
 
   const getUserFromToken = useCallback(() => {
     const token = localStorage.getItem("token");
@@ -213,8 +225,46 @@ export default function HomeView() {
   }, [navigate, checkAuth])
 
   const handleSearch = async () => {
+    if (searchValue.trim() == "") return;
+    const token = checkAuth();
+    if (!token) return;
+
+    setImagesLoaded(false);
+    setIsLoadingSearch(true)
+    setSearchResult([])
+
     console.log("Searching movie")
+    console.log(`Searching: ${searchValue}`)
+    const response = await fetch(`/api/movie/search/${searchValue}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      }
+    });
+
+    const data = await response.json();
+    const results: MovieSearchResult[] = data.result || [];
+
+    await preloadImages(results);
+
+    setSearchResult(results)
+    setImagesLoaded(true)
+    setIsLoadingSearch(false)
   }
+
+  const preloadImages = (movies: MovieSearchResult[]) => {
+    return Promise.all(
+      movies.map(movie => {
+        return new Promise<void>((resolve) => {
+          const img = new Image();
+          img.src = movie.image;
+          img.onload = () => resolve();
+          img.onerror = () => resolve();
+        });
+      })
+    );
+  };
 
   const handleCreate = async () => {
     const { value: newListName } = await Swal.fire({
@@ -450,6 +500,12 @@ export default function HomeView() {
                 type="text"
                 placeholder="Enter movie name"
                 className="flex-1 px-3 py-2 rounded-lg bg-stone-700 text-white placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleSearch();
+                  }
+                }}
+                onChange={(e) => setSearchValue(e.target.value)}
               />
               <div className="flex gap-2">
                 <Button className="bg-blue-600 hover:bg-blue-700 flex-1 sm:flex-none"
@@ -465,6 +521,40 @@ export default function HomeView() {
                 </Button>
               </div>
             </div>
+
+            {isLoadingSearch && (
+              <h2 className="text-stone-400 font-bold text-center animate-pulse text-2xl pt-4">Loading...</h2>
+            )}
+            {!isLoadingSearch && imagesLoaded && searchResult.length > 0 && (
+              <div className="w-full max-w-lg mt-6 bg-stone-800/60 p-4 border-2 border-stone-700 rounded-md">
+                <div className="max-h-[400px] overflow-y-auto pr-2">
+                  {searchResult.map((res, i) => {
+                    return (
+                      <div key={i}>
+                        <div className="flex items-center space-x-4 mb-2">
+                          <img
+                            src={res.image}
+                            className="w-16 h-auto rounded shadow"
+                            alt={res.title}
+                          />
+
+                          <span className="text-white">
+                            <a
+                              href={`${res.link}`}
+                              className="text-blue-300 hover:text-blue-500"
+                            >
+                              {res.title}
+                            </a>{" "}
+                            - {res.year}
+                          </span>
+                        </div>
+                        <hr className="border-stone-600 pb-2" />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 

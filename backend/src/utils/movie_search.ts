@@ -115,9 +115,9 @@ export const search_movie_on_tmdb = async (movie_name: string): Promise<SearchTe
       const mediaType = container.find('a.result').attr('data-media-type');
       const releaseDateRaw = container.find('.release_date').first().text().trim();
       const year = releaseDateRaw.match(/\d{4}/)?.[0];
-      const image = container.find('.poster.w-full').attr('src') || "https://upload.wikimedia.org/wikipedia/commons/archive/c/c2/20170513175702%21No_image_poster.png";
+      const image = container.find('.poster.w-full').attr('src');
 
-      if (!title || !link || !year) return
+      if (!title || !link || !year || !image) return
 
       if (mediaType == "movie") {
         resultados.push({
