@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { setMovieRate } from "@/services/movie.service";
+import { setMovieRate, getInfoById, searchMovie } from "@/services/movie.service";
 
 type RateStatus = | "ok"
 
@@ -21,4 +21,30 @@ export const rateMovie = async (req: Request, res: Response) => {
   }
 
   return res.status(500).json({ message: "User data missing from request" });
+}
+
+export const getMovieInfo = async (req: Request, res: Response) => {
+  const user = req.user;
+  if (!user) {
+    return res.status(500).json({ message: "User data missing from request" });
+  }
+
+  const data = req.params.id
+
+  const response = await getInfoById(String(data));
+
+  return res.status(200).json({ movie: response });
+}
+
+export const getMovieSearch = async (req: Request, res: Response) => {
+  const user = req.user;
+  if (!user) {
+    return res.status(500).json({ message: "User data missing from request" });
+  }
+
+  const data = req.params.movie
+
+  const response = await searchMovie(String(data))
+
+  return res.status(200).json({ result: response });
 }

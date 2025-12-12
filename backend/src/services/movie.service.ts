@@ -1,4 +1,5 @@
 import { pool } from "@/config/db";
+import { search_movie_on_db, search_movie_on_tmdb } from "@/utils/movie_search"
 import { Movie } from "@/models/movie.model";
 import { RowDataPacket } from "mysql2";
 
@@ -30,4 +31,14 @@ export const setMovieRate = async (user_id: number, movie: Movie, score_movie: s
   )
 
   return { status: "ok" }
+}
+
+export const getInfoById = async (movie_id: string) => {
+  const data = await search_movie_on_db(movie_id);
+  return data;
+}
+
+export const searchMovie = async (movie_title: string) => {
+  const data = await search_movie_on_tmdb(String(movie_title));
+  return data;
 }
