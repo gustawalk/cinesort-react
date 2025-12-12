@@ -8,7 +8,6 @@ import { MovieModal } from "@/components/utility/MovieModal";
 import type { MovieInfo } from "@/interfaces/MovieInfo";
 import type { GetUserListsOptions } from "@/interfaces/GetUserListsOptions";
 import Swal from 'sweetalert2';
-import { preloadModule } from "react-dom";
 
 export interface UserStats {
   lastMovie: {
