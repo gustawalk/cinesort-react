@@ -51,7 +51,6 @@ export default function LoginView() {
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
 
-      console.log(data)
       navigate("/");
     } catch (err) {
       setError("Something went wrong, try again later.");

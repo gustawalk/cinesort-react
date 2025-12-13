@@ -71,7 +71,6 @@ export const search_movie_on_db = async (id_filme: string): Promise<Movie> => {
     );
 
     if (result.length < 1) {
-      console.log("Movie not found, searching and inserting on db")
       const movie = await get_info_from_tmdb(id_filme);
       const [result] = await pool.query<ResultSetHeader>(
         "INSERT INTO filmes (titulo, sinopse, ano, duracao, diretor, poster, imdb_id, imdb_rate) VALUES (?, ?, ?, ? ,? ,? ,?, ?)",
@@ -82,11 +81,8 @@ export const search_movie_on_db = async (id_filme: string): Promise<Movie> => {
         "SELECT * FROM filmes WHERE id = ?", [result.insertId]
       )
 
-      console.log(rows[0])
       return rows[0] as Movie;
     }
-    console.log("movie found")
-    console.log(result[0] as Movie)
 
     return result[0] as Movie;
   } catch (err) {

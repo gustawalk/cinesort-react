@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { getUserLists, createNewList, deleteUserList, drawFromList } from "@/services/list.service";
+import { getUserLists, createNewList, deleteUserList, drawFromList, addMovieToList } from "@/services/list.service";
 
 type UserListsReturn = "ok" | "no_content";
 
@@ -95,6 +95,31 @@ export const drawList = async (req: Request, res: Response) => {
 
   if (responsesMap[result.status]) {
     return responsesMap[result.status]();
+  }
+
+  return res.status(500).json({ message: "Something went wrong" })
+}
+
+type AddStatus = "ok" | "conflict"
+
+export const movieAddList = async (req: Request, res: Response) => {
+  const user = req.user;
+
+  if (!user) {
+    return res.status(500).json({ message: "User data missing from request" });
+  }
+
+  const { listId, movieId } = req.body;
+
+  const result = await addMovieToList(listId, movieId, user.id);
+
+  const responsesMap: Record<AddStatus, () => Response> = {
+    ok: () => res.status(200).json({ message: "Movie inserted" }),
+    conflict: () => res.status(409).json({ message: "Movie already in the list" })
+  }
+
+  if (responsesMap[result.status]) {
+    return responsesMap[result.status]()
   }
 
   return res.status(500).json({ message: "Something went wrong" })

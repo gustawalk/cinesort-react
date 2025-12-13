@@ -6,8 +6,6 @@ export default ({ mode }: ConfigEnv) => {
   // Carrega as variáveis do .env do frontend
   const env = loadEnv(mode, process.cwd(), 'VITE_')
 
-  console.log(env.VITE_API_URL)
-
   return defineConfig({
     plugins: [react()],
     resolve: {

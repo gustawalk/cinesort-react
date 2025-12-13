@@ -8,6 +8,7 @@ import { MovieModal } from "@/components/utility/MovieModal";
 import type { MovieInfo } from "@/interfaces/MovieInfo";
 import type { GetUserListsOptions } from "@/interfaces/GetUserListsOptions";
 import Swal from 'sweetalert2';
+import showToast from "@/components/ui/toast";
 
 export interface UserStats {
   lastMovie: {
@@ -78,31 +79,12 @@ export default function HomeView() {
 
     try {
       const decoded = decodeJwt(token);
-      console.log(decoded);
       return decoded;
     } catch (err) {
       console.error('Invalid token: ', err)
       return null;
     }
   }, [])
-
-  type iconTypes = | "success" | "warning"
-
-  const showToast = (icon: iconTypes, title: string) => {
-    const Toast = Swal.mixin({
-      toast: true,
-      position: "top-end",
-      showConfirmButton: false,
-      timer: 3000,
-      background: "#262626",
-      color: "#ffffff"
-    });
-    Toast.fire({
-      icon: icon,
-      title: title
-    });
-
-  }
 
   const checkAuth = useCallback(() => {
     const token = localStorage.getItem("token")
@@ -126,8 +108,6 @@ export default function HomeView() {
     try {
       const token = checkAuth()
 
-      console.log("fazendo o fetch dos stats");
-
       const response = await fetch("/api/user/stats", {
         method: "GET",
         headers: {
@@ -139,10 +119,9 @@ export default function HomeView() {
       const data = await response.json();
       const dataUserStats = data.user_stats;
 
-      console.log(dataUserStats)
       setUserStats(dataUserStats);
     } catch (err) {
-      console.log(err)
+      throw err;
     }
   }, [checkAuth, navigate])
 
@@ -215,11 +194,10 @@ export default function HomeView() {
         }
       }
 
-      console.log("Updated lists: ", lists)
     } catch (err) {
-      console.error("Something went wrong: ", err);
       localStorage.removeItem("token");
       navigate("/login")
+      throw err;
     }
   }, [navigate, checkAuth])
 
@@ -232,8 +210,6 @@ export default function HomeView() {
     setIsLoadingSearch(true)
     setSearchResult([])
 
-    console.log("Searching movie")
-    console.log(`Searching: ${searchValue}`)
     const response = await fetch(`/api/movie/search/${searchValue}`, {
       method: "GET",
       headers: {
@@ -289,7 +265,6 @@ export default function HomeView() {
     const token = checkAuth();
     if (!token) return;
 
-    console.log('Creating list:', newListName)
     const response = await fetch("/api/list", {
       method: "POST",
       headers: {
@@ -299,7 +274,6 @@ export default function HomeView() {
       body: JSON.stringify({ listName: newListName })
     });
 
-    console.log(response)
     if (response.status == 409) {
       Swal.fire({
         title: "This list already exists",
@@ -318,7 +292,6 @@ export default function HomeView() {
   }
 
   const handleDraw = async () => {
-    console.log(`Drawing from ${selectedList}`)
     const token = checkAuth();
     if (!token) return;
     const response = await fetch(`/api/list/${selectedList}/draw`, {
@@ -348,7 +321,6 @@ export default function HomeView() {
   }
 
   const handleDelete = async () => {
-    console.log(`Deleting list with id: ${selectedList}`)
 
     const token = checkAuth();
     if (!token) return;
@@ -365,7 +337,6 @@ export default function HomeView() {
       cancelButtonColor: "#d33"
     }).then(async (result) => {
       if (result.isConfirmed) {
-        console.log(`Deleted list with id: ${selectedList}`)
         const response = await fetch("/api/list", {
           method: "DELETE",
           headers: {
@@ -389,13 +360,9 @@ export default function HomeView() {
   }
 
   const handleMovieRated = async (rating: string) => {
-    // TODO: handle after rating, as updating user statistics and removing pendency
     const token = checkAuth();
     if (!token) return;
 
-    console.log(selectedMovie)
-
-    console.log('handle after rate')
     const response = await fetch("/api/movie/rate", {
       method: "POST",
       headers: {

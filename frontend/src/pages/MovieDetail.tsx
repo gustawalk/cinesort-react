@@ -4,6 +4,7 @@ import type { GetUserListsOptions } from "@/interfaces/GetUserListsOptions";
 import { decodeJwt } from "jose";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import showToast from "@/components/ui/toast";
 import Swal from "sweetalert2";
 
 interface UserLists {
@@ -18,7 +19,7 @@ export default function MovieDetail() {
   const [userLists, setUserLists] = useState<UserLists[]>([])
   const [selectedList, setSelectedList] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true)
-
+  const [addButtonDisabled, setAddButtonDisabled] = useState<boolean>(false);
 
   const getUserFromToken = () => {
     const token = localStorage.getItem("token");
@@ -26,7 +27,6 @@ export default function MovieDetail() {
 
     try {
       const decoded = decodeJwt(token);
-      console.log(decoded);
       return decoded;
     } catch (err) {
       console.error("Invalid token: ", err);
@@ -95,8 +95,6 @@ export default function MovieDetail() {
           setSelectedList(lists[0].id);
         }
       }
-
-      console.log("Updated lists: ", lists)
     } catch (err) {
       console.error("Something went wrong: ", err);
       localStorage.removeItem("token");
@@ -128,7 +126,6 @@ export default function MovieDetail() {
     const token = checkAuth();
     if (!token) return;
 
-    console.log('Creating list:', newListName)
     const response = await fetch("/api/list", {
       method: "POST",
       headers: {
@@ -138,7 +135,6 @@ export default function MovieDetail() {
       body: JSON.stringify({ listName: newListName })
     });
 
-    console.log(response)
     if (response.status == 409) {
       Swal.fire({
         title: "This list already exists",
@@ -158,7 +154,7 @@ export default function MovieDetail() {
 
   const handleBack = () => {
     if (window.history.length > 2) navigate(-1)
-    else navigate("/home")
+    else navigate("/")
   }
 
   const fetchMovieData = async () => {
@@ -179,8 +175,42 @@ export default function MovieDetail() {
     setIsLoading(false)
   };
 
-  const handleAddToList = () => {
-    console.log(`Adding ${id} to list ${selectedList}`)
+  const handleAddToList = async () => {
+    const token = checkAuth();
+    if (!token) return;
+    if (!movieInfo) return;
+    setAddButtonDisabled(true)
+
+    try {
+      const request = await fetch("/api/list/movie/add", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ listId: selectedList, movieId: movieInfo.imdb_id })
+      })
+
+      if (request.status === 200) {
+        showToast("success", "Movie added")
+      }
+      else if (request.status === 409) {
+        Swal.fire({
+          title: "Movie already in the list",
+          text: "Try using a different list!",
+          icon: "error",
+          background: "#1c1917",
+          color: "#ffffff",
+          iconColor: "#ef4444",
+          confirmButtonText: "Ok",
+          confirmButtonColor: "#2563eb",
+        });
+      }
+    } catch (err) {
+      throw err;
+    } finally {
+      setAddButtonDisabled(false)
+    }
   }
 
   useEffect(() => {
@@ -292,6 +322,7 @@ export default function MovieDetail() {
 
             <Button className="rounded-lg shadow-md px-8 py-3 bg-green-700 text-white hover:bg-green-800 transition duration-150"
               onClick={handleAddToList}
+              disabled={addButtonDisabled}
             >
               Add movie to your list
             </Button>

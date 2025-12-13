@@ -91,8 +91,6 @@ export const MovieModal = ({ movie, isOpen, listId, onClose, onMovieRated }: Mov
 
     if (result.isConfirmed) {
       try {
-        // TODO: real handling the rate, sending info to backend
-        console.log("Rating with: ", rating, " on list id: ", listId)
         onMovieRated?.(String(rating));
         onClose();
       } catch (error) {

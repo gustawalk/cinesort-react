@@ -8,6 +8,7 @@ type ListResult = | { status: "ok", user_lists: List[] } | { status: "no_content
 type CreateResult = | { status: "created" } | { status: "conflict" }
 type DeleteResult = | { status: "deleted" }
 type DrawResult = | { status: "ok", movie: Movie } | { status: "no_content", movie: null } | { status: "pendency", movie: null }
+type AddResult = | { status: "ok" } | { status: "conflict" }
 
 interface UserIdOnly {
   id: number
@@ -134,3 +135,33 @@ export const drawFromList = async (list_id: number, user_id: number): Promise<Dr
     throw err;
   }
 }
+
+export const addMovieToList = async (list_id: number, movie_id: string, user_id: number): Promise<AddResult> => {
+  try {
+    const [result]: any = await pool.query(
+      `
+        INSERT INTO movie_lists (id_lista_origem, movie_imdb_id)
+        SELECT l.id, f.imdb_id
+        FROM listas l
+        JOIN filmes f ON f.imdb_id = ?
+        WHERE l.id = ?
+          AND l.id_user_dono = ?
+          AND NOT EXISTS (
+            SELECT 1
+            FROM movie_lists ml
+            WHERE ml.id_lista_origem = l.id
+              AND ml.movie_imdb_id = f.imdb_id
+          )
+      `,
+      [movie_id, list_id, user_id]
+    );
+
+    if (result.affectedRows === 0) {
+      return { status: "conflict" };
+    }
+
+    return { status: "ok" };
+  } catch (err) {
+    throw err;
+  }
+};
