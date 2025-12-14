@@ -86,6 +86,12 @@ export default function HomeView() {
     }
   }, [])
 
+  const truncate = (text: string, max: number): string => {
+    if (text.length < max) return text
+    const str = text.slice(0, max) + "..."
+    return str;
+  }
+
   const checkAuth = useCallback(() => {
     const token = localStorage.getItem("token")
     if (!token) {
@@ -176,7 +182,7 @@ export default function HomeView() {
 
       const lists = data.user_lists.map((l: any) => ({
         id: l.id,
-        nome_lista: l.nome_lista
+        nome_lista: truncate(l.nome_lista, 20)
       }))
 
       if (lists.length === 0) {

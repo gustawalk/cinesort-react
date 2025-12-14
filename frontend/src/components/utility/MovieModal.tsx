@@ -10,14 +10,20 @@ interface MovieModalProps {
   onMovieRated?: (rating: string) => void;
 }
 
-export const MovieModal = ({ movie, isOpen, listId, onClose, onMovieRated }: MovieModalProps) => {
+export const MovieModal = ({ movie, isOpen, onClose, onMovieRated }: MovieModalProps) => {
   const [rating, setRating] = useState<number>(0);
   const modalRef = useRef<HTMLDivElement>(null);
   const displayRate = movie.imdb_rate || "??";
   const [isStremioBtnEnabled, setIsStremioBtnEnabled] = useState<boolean>(true);
+  const [posterLoaded, setPosterLoaded] = useState<boolean>(false);
 
   useEffect(() => {
-  }, [isOpen]);
+    if (!isOpen) return;
+
+    setPosterLoaded(false);
+
+    loadImage(movie.poster).then(() => setPosterLoaded(true)).catch(() => setPosterLoaded(true));
+  }, [isOpen, movie.poster]);
 
   const handleRatingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/\D/g, "");
@@ -29,6 +35,15 @@ export const MovieModal = ({ movie, isOpen, listId, onClose, onMovieRated }: Mov
     let intValue = parseInt(value || "0");
     intValue = Math.min(100, Math.max(0, intValue));
     setRating(intValue);
+  };
+
+  const loadImage = (src: string) => {
+    return new Promise<string>((resolve, reject) => {
+      const img = new Image();
+      img.src = src;
+      img.onload = () => resolve(src);
+      img.onerror = reject;
+    });
   };
 
   const openStremio = () => {
@@ -140,7 +155,17 @@ export const MovieModal = ({ movie, isOpen, listId, onClose, onMovieRated }: Mov
 
           <h2 id="movie-title" className="text-xl font-bold">{movie.titulo} - {movie.ano}</h2>
           <h4 className="text-sm text-gray-300">{movie.duracao}</h4>
-          <img src={movie.poster} alt={`${movie.titulo} poster`} className="w-full h-80 2xl:h-auto rounded-lg mt-3" />
+          {!posterLoaded ? (
+            <div className="w-full h-80 flex items-center justify-center">
+              <div className="animate-spin h-8 w-8 border-4 border-white border-t-transparent rounded-full" />
+            </div>
+          ) : (
+            <img
+              src={movie.poster}
+              alt={`${movie.titulo} poster`}
+              className="w-full h-80 rounded-lg mt-3"
+            />
+          )}
 
           <label htmlFor="rating" className="mt-4">Rate this movie</label>
           <div className="flex items-center justify-center gap-2 mt-1">

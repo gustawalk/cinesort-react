@@ -179,6 +179,20 @@ export default function MovieDetail() {
     const token = checkAuth();
     if (!token) return;
     if (!movieInfo) return;
+    if (selectedList == -1) {
+      Swal.fire({
+        title: "You don't have any list",
+        text: "Try creating your first list!",
+        icon: "warning",
+        background: "#1c1917",
+        color: "#FFFFFF",
+        iconColor: "#ffdd00",
+        confirmButtonText: "Ok",
+        confirmButtonColor: "#2563eb",
+      });
+      return;
+    }
+
     setAddButtonDisabled(true)
 
     try {
@@ -301,7 +315,7 @@ export default function MovieDetail() {
 
           {/* Action Buttons */}
           <div className="flex flex-wrap items-center justify-center gap-4">
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg transition duration-150"
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white py-6 px-8 rounded-lg transition duration-150"
               onClick={handleCreate}
             >
               Create
@@ -310,7 +324,7 @@ export default function MovieDetail() {
             <select
               value={selectedList ?? ''}
               onChange={(e) => setSelectedList(Number(e.target.value))}
-              className="px-3 py-2 rounded-lg bg-stone-700 text-white outline-none"
+              className="px-3 py-3 rounded-lg bg-stone-700 text-white outline-none"
               disabled={selectedList === -1}
             >
               {userLists.map((list) => (
@@ -320,7 +334,7 @@ export default function MovieDetail() {
               ))}
             </select>
 
-            <Button className="rounded-lg shadow-md px-8 py-3 bg-green-700 text-white hover:bg-green-800 transition duration-150"
+            <Button className="rounded-lg shadow-md px-8 py-6 bg-green-700 text-white hover:bg-green-800 transition duration-150"
               onClick={handleAddToList}
               disabled={addButtonDisabled}
             >
