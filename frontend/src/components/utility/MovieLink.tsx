@@ -8,6 +8,7 @@ export const MovieLink = ({ movie }: { movie?: { name_movie: string; id_movie: s
   }
 
   const truncate = (text: string, max: number): string => {
+    if (text.length < max) return text;
     const str = text.slice(0, max) + "..."
     return str;
   }

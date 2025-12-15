@@ -1,5 +1,6 @@
 import { List } from "@/models/list.model"
 import { Movie } from "@/models/movie.model";
+import { ListEdit } from "@/models/listedit.model";
 import { pool } from "@/config/db";
 import { randomUUID } from "crypto";
 import { RowDataPacket } from "mysql2";
@@ -8,7 +9,9 @@ type ListResult = | { status: "ok", user_lists: List[] } | { status: "no_content
 type CreateResult = | { status: "created" } | { status: "conflict" }
 type DeleteResult = | { status: "deleted" }
 type DrawResult = | { status: "ok", movie: Movie } | { status: "no_content", movie: null } | { status: "pendency", movie: null }
+type EditResult = | { status: "ok", movies: ListEdit[] } | { status: "no_content", movies: null }
 type AddResult = | { status: "ok" } | { status: "conflict" }
+type DeleteFromListResult = | { status: "deleted" }
 
 interface UserIdOnly {
   id: number
@@ -82,6 +85,23 @@ export const deleteUserList = async (list_id: number, user_id: number): Promise<
     );
 
     return { status: "deleted" }
+  } catch (err) {
+    throw err;
+  }
+}
+
+
+export const editMoviesLists = async (list_id: number, user_id: number): Promise<EditResult> => {
+  try {
+    console.log(`listid: ${list_id}, user_id: ${user_id}`)
+
+    const [moviesOnList] = await pool.query<RowDataPacket[]>(
+      "SELECT ml.id, f.titulo, f.ano, f.poster, f.imdb_id FROM movie_lists AS ml JOIN listas l ON ml.id_lista_origem = l.id JOIN filmes f ON f.imdb_id = ml.movie_imdb_id WHERE l.id_user_dono = ? AND ml.id_lista_origem = ?", [user_id, list_id]
+    )
+
+    console.log(moviesOnList)
+    const movies = moviesOnList as ListEdit[]
+    return { status: "ok", movies: movies }
   } catch (err) {
     throw err;
   }
@@ -165,3 +185,23 @@ export const addMovieToList = async (list_id: number, movie_id: string, user_id:
     throw err;
   }
 };
+
+export const deleteMovieFromList = async (list_id: number, movie_id: string, user_id: number): Promise<DeleteFromListResult> => {
+  try {
+    await pool.query(
+      `
+        DELETE ml
+        FROM movie_lists ml
+        JOIN listas l ON ml.id_lista_origem = l.id
+        WHERE l.id_user_dono = ?
+        AND ml.id_lista_origem = ?
+        AND ml.movie_imdb_id = ?
+    `,
+      [user_id, list_id, movie_id]
+    );
+
+    return { status: "deleted" }
+  } catch (err) {
+    throw err;
+  }
+}

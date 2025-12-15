@@ -9,6 +9,8 @@ import type { MovieInfo } from "@/interfaces/MovieInfo";
 import type { GetUserListsOptions } from "@/interfaces/GetUserListsOptions";
 import Swal from 'sweetalert2';
 import showToast from "@/components/ui/toast";
+import { ListEdit } from "@/components/utility/ListEdit";
+import type { ListEditModel } from "@/interfaces/ListEditModel";
 
 export interface UserStats {
   lastMovie: {
@@ -66,7 +68,9 @@ export default function HomeView() {
   const [selectedList, setSelectedList] = useState<number | null>(null);
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isListEditOpen, setIsListEditOpen] = useState<boolean>(false);
+  const [editListMovies, setEditListMovies] = useState<ListEditModel[] | null>(null)
   const [selectedMovie, setSelectedMovie] = useState<MovieInfo | null>(null)
   const [searchValue, setSearchValue] = useState<string>("");
   const [searchResult, setSearchResult] = useState<MovieSearchResult[]>([])
@@ -91,6 +95,10 @@ export default function HomeView() {
     const str = text.slice(0, max) + "..."
     return str;
   }
+
+  const selectedListData = userLists.find(
+    (list) => list.id === selectedList
+  );
 
   const checkAuth = useCallback(() => {
     const token = localStorage.getItem("token")
@@ -207,6 +215,30 @@ export default function HomeView() {
     }
   }, [navigate, checkAuth])
 
+  const handleDeleteFromEdit = async (movie_id: string) => {
+    const token = checkAuth();
+    if (!token) return;
+
+    const response = await fetch("/api/list/movie/delete", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({ listId: selectedList, movieId: movie_id })
+    })
+
+    if (response.status === 200) {
+      setEditListMovies(prev =>
+        prev ? prev.filter(m => m.imdb_id !== movie_id) : prev
+      );
+      showToast("success", "Deleted successfully")
+      return;
+    }
+
+    showToast("warning", "Something went wrong")
+  }
+
   const handleSearch = async () => {
     if (searchValue.trim() == "") return;
     const token = checkAuth();
@@ -297,6 +329,24 @@ export default function HomeView() {
     getUserLists({ selectLastList: true });
   }
 
+  const handleEdit = async () => {
+    const token = checkAuth();
+    if (!token) return;
+
+    const response = await fetch(`/api/list/${selectedList}/edit`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      }
+    })
+
+    const data = await response.json();
+    console.log(data)
+    setEditListMovies(data.movies)
+    setIsListEditOpen(true)
+  }
+
   const handleDraw = async () => {
     const token = checkAuth();
     if (!token) return;
@@ -363,6 +413,10 @@ export default function HomeView() {
   const handleCloseModal = () => {
     setIsModalOpen(false)
     setSelectedMovie(null)
+  }
+
+  const handleListEditClose = () => {
+    setIsListEditOpen(false);
   }
 
   const handleMovieRated = async (rating: string) => {
@@ -572,6 +626,7 @@ export default function HomeView() {
                 <Button
                   className="bg-yellow-500 hover:bg-yellow-600 flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={selectedList === -1}
+                  onClick={handleEdit}
                 >
                   Edit
                 </Button>
@@ -626,6 +681,16 @@ export default function HomeView() {
           onClose={handleCloseModal}
           listId={String(selectedList)}
           onMovieRated={handleMovieRated}
+        />
+      )}
+
+      {isListEditOpen && selectedListData && editListMovies && (
+        <ListEdit
+          listName={selectedListData.nome_lista}
+          movies={editListMovies}
+          isOpen={isListEditOpen}
+          onClose={handleListEditClose}
+          handleDelete={handleDeleteFromEdit}
         />
       )}
     </div>
