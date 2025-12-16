@@ -1,4 +1,4 @@
-import { getUserStats, checkUserPendency } from "@/services/user.service";
+import { getUserStats, checkUserPendency, getRateByMovieId } from "@/services/user.service";
 import { Request, Response } from "express";
 
 export const userStats = async (req: Request, res: Response) => {
@@ -31,6 +31,31 @@ export const userPendency = async (req: Request, res: Response) => {
 
   if (responsesMap[userPendencyResult.result]) {
     return responsesMap[userPendencyResult.result]();
+  }
+
+  return res.status(500).json({ message: "Something went wrong" });
+}
+
+type userRateStatus = "ok" | "no_content"
+
+export const userRate = async (req: Request, res: Response) => {
+  const user = req.user;
+
+  if (!user) {
+    return res.status(500).json({ message: "User data missing from request" });
+  }
+
+  const movie_id = req.params.movieid ?? ""
+
+  const result = await getRateByMovieId(movie_id, user.id)
+
+  const responsesMap: Record<userRateStatus, () => Response> = {
+    ok: () => res.status(200).json({ message: "ok", rate: result.rate }),
+    no_content: () => res.status(204).json({ message: "No content", rate: result.rate })
+  }
+
+  if (responsesMap[result.status]) {
+    return responsesMap[result.status]();
   }
 
   return res.status(500).json({ message: "Something went wrong" });

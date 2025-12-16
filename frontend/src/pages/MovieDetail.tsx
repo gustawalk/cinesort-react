@@ -16,9 +16,14 @@ export default function MovieDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [movieInfo, setMovieInfo] = useState<MovieDetail>();
+  const [isUserRated, setIsUserRated] = useState<boolean>(false);
+  const [userRate, setUserRate] = useState<number | null>(null);
+  const [movieLoading, setMovieLoading] = useState(true);
+  const [listsLoading, setListsLoading] = useState(true);
+  const [rateLoading, setRateLoading] = useState(true);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const [userLists, setUserLists] = useState<UserLists[]>([])
   const [selectedList, setSelectedList] = useState<number>(0);
-  const [isLoading, setIsLoading] = useState<boolean>(true)
   const [addButtonDisabled, setAddButtonDisabled] = useState<boolean>(false);
 
   const getUserFromToken = () => {
@@ -50,6 +55,45 @@ export default function MovieDetail() {
 
     return token;
   };
+
+  const checkUserRate = async (imdb_id: string) => {
+    try {
+      const token = checkAuth()
+      if (!token) return;
+
+      const response = await fetch(`/api/user/rate/${imdb_id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        }
+      })
+
+      if (response.status === 204) {
+        setUserRate(null);
+        setRateLoading(false)
+        return;
+      }
+
+      if (!response.ok) {
+        setUserRate(null)
+        setRateLoading(false)
+        return;
+      }
+
+      const data = await response.json();
+      if (!data) return;
+
+      const rawRate = Number(data.rate);
+      const normalizedRate = rawRate / 10;
+
+      setUserRate(normalizedRate);
+      setIsUserRated(true)
+      setRateLoading(false)
+    } catch (err) {
+      throw err;
+    }
+  }
 
   const getUserLists = async ({ selectLastList = false }: GetUserListsOptions = {}) => {
     try {
@@ -99,6 +143,8 @@ export default function MovieDetail() {
       console.error("Something went wrong: ", err);
       localStorage.removeItem("token");
       navigate("/login")
+    } finally {
+      setListsLoading(false)
     }
   }
 
@@ -172,7 +218,7 @@ export default function MovieDetail() {
     const data = await request.json();
     const movie = data.movie
     setMovieInfo(movie);
-    setIsLoading(false)
+    setMovieLoading(false)
   };
 
   const handleAddToList = async () => {
@@ -227,18 +273,26 @@ export default function MovieDetail() {
     }
   }
 
+  const isLoading = movieLoading || listsLoading || rateLoading;
+
   useEffect(() => {
     getUserLists();
     fetchMovieData();
   }, []);
 
+  useEffect(() => {
+    if (!movieInfo?.imdb_id) return;
+    checkUserRate(movieInfo.imdb_id);
+  }, [movieInfo?.imdb_id]);
+
   if (isLoading) {
     return (
-      <div className="bg-stone-900 text-white flex items-center justify-center min-h-screen p-4">
-        <div className="w-16 h-16 border-4 border-t-transparent rounded-full animate-spin"></div>
+      <div className="bg-stone-900 text-white flex items-center justify-center min-h-screen">
+        <div className="w-16 h-16 border-4 border-t-transparent rounded-full animate-spin" />
       </div>
-    )
-  } else {
+    );
+  }
+  else {
     return (
       <div className="bg-stone-900 text-white flex items-center justify-center min-h-screen p-4">
         <div className="w-full max-w-2xl flex flex-col gap-6 items-center">
@@ -251,6 +305,35 @@ export default function MovieDetail() {
               ← Home
             </Button>
 
+            {isUserRated && (
+              <div className="flex items-center gap-2 align-middle -mb-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="80" height="30" viewBox="0 0 80 30">
+                  <rect width="80" height="30" rx="8" ry="8" fill="#3B82F6" />
+                  <text
+                    x="50%"
+                    y="50%"
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    dy=".1em"
+                    fontFamily="Arial, sans-serif"
+                    fontSize="16"
+                    fill="white"
+                    fontWeight="bold">
+                    User
+                  </text>
+                </svg>
+
+                <svg className="w-6 h-6 text-blue-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                  width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M13.849 4.22c-.684-1.626-3.014-1.626-3.698 0L8.397 8.387l-4.552.361c-1.775.14-2.495
+                               2.331-1.142 3.477l3.468 2.937-1.06 4.392c-.413 1.713 1.472 3.067
+                               2.992 2.149L12 19.35l3.897 2.354c1.52.918 3.405-.436
+                               2.992-2.15l-1.06-4.39 3.468-2.938c1.353-1.146.633-3.336-1.142-3.477l-4.552-.36-1.754-4.17Z"/>
+                  <title>User Rating</title>
+                </svg>
+                <h1 className="text-lg font-bold">{userRate} / 10</h1>
+              </div>
+            )}
 
             <div className="flex items-center gap-2 align-middle -mb-2">
               <svg xmlns="http://www.w3.org/2000/svg" width="80" height="30" viewBox="0 0 80 30">
@@ -289,11 +372,22 @@ export default function MovieDetail() {
 
             <p>{movieInfo?.duracao}</p>
 
-            <img
-              src={movieInfo?.poster}
-              alt={movieInfo?.titulo}
-              className="mt-4 rounded-lg shadow-md mx-auto max-w-xs"
-            />
+            <div className="mt-4 relative flex justify-center">
+              {!imageLoaded && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-10 h-10 border-4 border-t-transparent rounded-full animate-spin" />
+                </div>
+              )}
+
+              <img
+                src={movieInfo?.poster}
+                alt={movieInfo?.titulo}
+                onLoad={() => setImageLoaded(true)}
+                onError={() => setImageLoaded(true)}
+                className={`rounded-lg shadow-md max-w-xs transition-opacity duration-300 ${imageLoaded ? "opacity-100" : "opacity-0"
+                  }`}
+              />
+            </div>
 
             <p className="mt-4">
               <strong>Director</strong>

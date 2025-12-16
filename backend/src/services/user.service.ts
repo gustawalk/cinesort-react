@@ -4,6 +4,7 @@ import { RequestUser } from "@/types/express";
 import { RowDataPacket } from "mysql2";
 import { Movie } from "@/models/movie.model";
 import { Pendency } from "@/models/pendency.model";
+import { UserRate } from "@/models/userrate.model";
 
 type UserStatsResult = { status: "ok", user_stats: UserStats }
 
@@ -104,4 +105,21 @@ export const checkUserPendency = async (user_id: number): Promise<UserPendencyRe
   const movie = movieRows[0] as Movie;
 
   return { status: "ok", result: "true", movie: movie }
+}
+
+type RateByIdResult = | { status: "ok", rate: string } | { status: "no_content", rate: null }
+
+export const getRateByMovieId = async (movie_id: string, user_id: number): Promise<RateByIdResult> => {
+
+  const [rows] = await pool.query<RowDataPacket[]>(
+    "SELECT * FROM watched_movies WHERE id_movie = ? AND id_user = ?", [movie_id, user_id]
+  )
+
+  if (rows.length === 0) {
+    return { status: "no_content", rate: null }
+  }
+
+  const data = rows[0] as UserRate
+
+  return { status: "ok", rate: data.score_movie }
 }
