@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import showToast from "@/components/ui/toast";
 import Swal from "sweetalert2";
+import { appChannel } from "@/utils/broadcast";
 
 interface UserLists {
   id: number,
@@ -245,6 +246,7 @@ export default function MovieDetail() {
 
       if (request.status === 200) {
         showToast("success", "Movie added")
+        appChannel.postMessage({ type: "EDIT_UPDATE" })
       }
       else if (request.status === 409) {
         Swal.fire({

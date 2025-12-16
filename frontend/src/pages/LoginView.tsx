@@ -2,6 +2,7 @@ import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { appChannel } from "@/utils/broadcast";
 
 export default function LoginView() {
   const navigate = useNavigate();
@@ -50,7 +51,7 @@ export default function LoginView() {
 
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
-
+      appChannel.postMessage({ type: "LOGIN" })
       navigate("/");
     } catch (err) {
       setError("Something went wrong, try again later.");

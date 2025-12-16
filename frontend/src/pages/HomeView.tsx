@@ -11,6 +11,7 @@ import Swal from 'sweetalert2';
 import showToast from "@/components/ui/toast";
 import { ListEdit } from "@/components/utility/ListEdit";
 import type { ListEditModel } from "@/interfaces/ListEditModel";
+import { appChannel } from "@/utils/broadcast";
 
 export interface UserStats {
   lastMovie: {
@@ -215,15 +216,13 @@ export default function HomeView() {
     }
   }, [navigate, checkAuth])
 
-  const handleMovieClick = (link: string) => {
+  const handleMovieClick = () => {
     localStorage.setItem('movieSearch', JSON.stringify({
       searchValue,
       searchResult,
       imagesLoaded,
       timestamp: Date.now()
     }));
-
-    navigate(link);
   };
 
   const handleDeleteFromEdit = async (movie_id: string) => {
@@ -244,6 +243,7 @@ export default function HomeView() {
         prev ? prev.filter(m => m.imdb_id !== movie_id) : prev
       );
       showToast("success", "Deleted successfully")
+      appChannel.postMessage({ type: "EDIT_UPDATE" })
       return;
     }
 
@@ -337,6 +337,7 @@ export default function HomeView() {
       return;
     }
 
+    appChannel.postMessage({ type: "LIST_UPDATED" })
     getUserLists({ selectLastList: true });
   }
 
@@ -353,7 +354,6 @@ export default function HomeView() {
     })
 
     const data = await response.json();
-    console.log(data)
     setEditListMovies(data.movies)
     setIsListEditOpen(true)
   }
@@ -416,6 +416,7 @@ export default function HomeView() {
         if (response.status === 200) {
           getUserLists();
           showToast("success", "List deleted")
+          appChannel.postMessage({ type: "LIST_UPDATED" })
         }
       }
     })
@@ -452,13 +453,48 @@ export default function HomeView() {
     }
   }
 
-  const handleRandom = () => {
-    // TODO: handle random movie query
+  const handleRandom = async () => {
+    const token = checkAuth();
+    if (!token) return;
+
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You will get a random movie from our database with basic filters",
+      icon: "warning",
+      color: "#ffffff",
+      iconColor: "#c7950c",
+      showCancelButton: true,
+      background: "#1c1917",
+      confirmButtonColor: "#2563eb",
+      confirmButtonText: "Yes",
+      cancelButtonColor: "#d33"
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        const response = await fetch("/api/movie/random", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          }
+        });
+
+        if (response.status === 200) {
+          const data = await response.json();
+          setSelectedMovie(data.movie);
+          setIsModalOpen(true);
+        }
+      }
+    })
+
+
   }
 
   const handleLogout = () => {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
+
+    appChannel.postMessage({ type: "LOGOUT" })
+
     navigate("/login")
   }
 
@@ -486,6 +522,22 @@ export default function HomeView() {
     };
     fetchData();
   }, [getUserLists, getUserStats]);
+
+  useEffect(() => {
+    const handler = (event: MessageEvent) => {
+      if (event.data?.type === "LIST_UPDATED") {
+        getUserLists();
+      } else if (event.data?.type === "EDIT_UPDATE") {
+        handleEdit();
+      }
+    }
+
+    appChannel.addEventListener("message", handler);
+
+    return () => {
+      appChannel.removeEventListener("message", handler);
+    }
+  }, [getUserLists])
 
   if (isLoading) {
     return (
@@ -591,12 +643,14 @@ export default function HomeView() {
                             alt={res.title}
                           />
                           <span className="text-white">
-                            <button
-                              onClick={() => handleMovieClick(res.link)}
+                            <a
+                              onClick={() => handleMovieClick()}
                               className="text-blue-300 hover:text-blue-500 cursor-pointer bg-transparent border-none underline"
+                              href={res.link}
                             >
+
                               {res.title}
-                            </button>{" "}
+                            </a>{" "}
                             - {res.year}
                           </span>
                         </div>

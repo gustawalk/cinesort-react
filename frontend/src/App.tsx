@@ -5,32 +5,37 @@ import RegisterView from '@/pages/RegisterView'
 import MovieDetail from './pages/MovieDetail'
 import ProtectedRoute from '@/routes/ProtectedRoute'
 import GuestRoute from '@/routes/GuestRoute'
+import AppSync from './utils/AppSync'
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={
-        <ProtectedRoute>
-          <HomeView />
-        </ProtectedRoute>
-      } />
-      <Route path="/login" element={
-        <GuestRoute>
-          <LoginView />
-        </GuestRoute>
-      } />
-      <Route path="/register" element={
-        <GuestRoute>
-          <RegisterView />
-        </GuestRoute>
-      } />
-      <Route path='/movie/:id' element={
-        <ProtectedRoute>
-          <MovieDetail />
-        </ProtectedRoute>
-      }
-      />
-    </Routes>
+    <>
+      <AppSync />
+
+      <Routes>
+        <Route path="/" element={
+          <ProtectedRoute>
+            <HomeView />
+          </ProtectedRoute>
+        } />
+        <Route path="/login" element={
+          <GuestRoute>
+            <LoginView />
+          </GuestRoute>
+        } />
+        <Route path="/register" element={
+          <GuestRoute>
+            <RegisterView />
+          </GuestRoute>
+        } />
+        <Route path='/movie/:id' element={
+          <ProtectedRoute>
+            <MovieDetail />
+          </ProtectedRoute>
+        }
+        />
+      </Routes>
+    </>
   )
 }
 

@@ -2,6 +2,7 @@ import { pool } from "@/config/db";
 import { search_movie_on_db, search_movie_on_tmdb } from "@/utils/movie_search"
 import { Movie } from "@/models/movie.model";
 import { RowDataPacket } from "mysql2";
+import { checkUserPendency } from "./user.service";
 
 type setMovieRateResult = | { status: "ok" }
 
@@ -41,4 +42,48 @@ export const getInfoById = async (movie_id: string) => {
 export const searchMovie = async (movie_title: string) => {
   const data = await search_movie_on_tmdb(String(movie_title));
   return data;
+}
+
+type RandomResult = | { status: "ok", movie: Movie } | { status: "pendency", movie: null }
+
+export const randomMovie = async (user_id: number): Promise<RandomResult> => {
+
+  const hasPendency = await checkUserPendency(user_id);
+
+  if (hasPendency.result === "true") {
+    return { status: "pendency", movie: null }
+  }
+
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `
+      SELECT *
+      FROM filmes
+      WHERE
+        duracao NOT LIKE 'Error%'
+        AND ano NOT LIKE 'Error%'
+        AND CAST(ano AS UNSIGNED) < YEAR(CURDATE())
+        AND (
+          CASE
+            WHEN duracao LIKE '%h%' THEN
+              CAST(SUBSTRING_INDEX(duracao, 'h', 1) AS UNSIGNED) * 60 +
+              CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(duracao, 'h ', -1), 'm', 1) AS UNSIGNED)
+            ELSE
+              CAST(REPLACE(duracao, 'm', '') AS UNSIGNED)
+          END
+        ) >= 80
+        AND
+        imdb_rate >= 5.0
+      ORDER BY RAND()
+      LIMIT 1;
+    `
+  );
+
+  const random = rows[0] as Movie
+  const movie_id = random.imdb_id;
+
+  await pool.query(
+    "INSERT INTO pendencias (id_user_pendente, id_lista_origem, filme_id_imdb) VALUES (?, ?, ?)", [user_id, 0, movie_id]
+  );
+
+  return { status: "ok", movie: random }
 }

@@ -93,13 +93,10 @@ export const deleteUserList = async (list_id: number, user_id: number): Promise<
 
 export const editMoviesLists = async (list_id: number, user_id: number): Promise<EditResult> => {
   try {
-    console.log(`listid: ${list_id}, user_id: ${user_id}`)
-
     const [moviesOnList] = await pool.query<RowDataPacket[]>(
       "SELECT ml.id, f.titulo, f.ano, f.poster, f.imdb_id FROM movie_lists AS ml JOIN listas l ON ml.id_lista_origem = l.id JOIN filmes f ON f.imdb_id = ml.movie_imdb_id WHERE l.id_user_dono = ? AND ml.id_lista_origem = ?", [user_id, list_id]
     )
 
-    console.log(moviesOnList)
     const movies = moviesOnList as ListEdit[]
     return { status: "ok", movies: movies }
   } catch (err) {
