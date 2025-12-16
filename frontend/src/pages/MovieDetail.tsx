@@ -18,10 +18,8 @@ export default function MovieDetail() {
   const [movieInfo, setMovieInfo] = useState<MovieDetail>();
   const [isUserRated, setIsUserRated] = useState<boolean>(false);
   const [userRate, setUserRate] = useState<number | null>(null);
-  const [movieLoading, setMovieLoading] = useState(true);
-  const [listsLoading, setListsLoading] = useState(true);
-  const [rateLoading, setRateLoading] = useState(true);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [pageStatus, setPageStatus] = useState<"loading" | "ready" | "error">("loading");
   const [userLists, setUserLists] = useState<UserLists[]>([])
   const [selectedList, setSelectedList] = useState<number>(0);
   const [addButtonDisabled, setAddButtonDisabled] = useState<boolean>(false);
@@ -71,13 +69,11 @@ export default function MovieDetail() {
 
       if (response.status === 204) {
         setUserRate(null);
-        setRateLoading(false)
         return;
       }
 
       if (!response.ok) {
         setUserRate(null)
-        setRateLoading(false)
         return;
       }
 
@@ -89,7 +85,6 @@ export default function MovieDetail() {
 
       setUserRate(normalizedRate);
       setIsUserRated(true)
-      setRateLoading(false)
     } catch (err) {
       throw err;
     }
@@ -143,8 +138,6 @@ export default function MovieDetail() {
       console.error("Something went wrong: ", err);
       localStorage.removeItem("token");
       navigate("/login")
-    } finally {
-      setListsLoading(false)
     }
   }
 
@@ -218,7 +211,6 @@ export default function MovieDetail() {
     const data = await request.json();
     const movie = data.movie
     setMovieInfo(movie);
-    setMovieLoading(false)
   };
 
   const handleAddToList = async () => {
@@ -273,11 +265,19 @@ export default function MovieDetail() {
     }
   }
 
-  const isLoading = movieLoading || listsLoading || rateLoading;
-
   useEffect(() => {
-    getUserLists();
-    fetchMovieData();
+    const loadPage = async () => {
+      try {
+        await Promise.all([
+          getUserLists(),
+          fetchMovieData()
+        ])
+      } finally {
+        setPageStatus("ready")
+      }
+    }
+
+    loadPage();
   }, []);
 
   useEffect(() => {
@@ -285,7 +285,7 @@ export default function MovieDetail() {
     checkUserRate(movieInfo.imdb_id);
   }, [movieInfo?.imdb_id]);
 
-  if (isLoading) {
+  if (pageStatus === "loading") {
     return (
       <div className="bg-stone-900 text-white flex items-center justify-center min-h-screen">
         <div className="w-16 h-16 border-4 border-t-transparent rounded-full animate-spin" />

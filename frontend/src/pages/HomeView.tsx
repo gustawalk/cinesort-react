@@ -215,6 +215,17 @@ export default function HomeView() {
     }
   }, [navigate, checkAuth])
 
+  const handleMovieClick = (link: string) => {
+    localStorage.setItem('movieSearch', JSON.stringify({
+      searchValue,
+      searchResult,
+      imagesLoaded,
+      timestamp: Date.now()
+    }));
+
+    navigate(link);
+  };
+
   const handleDeleteFromEdit = async (movie_id: string) => {
     const token = checkAuth();
     if (!token) return;
@@ -441,6 +452,10 @@ export default function HomeView() {
     }
   }
 
+  const handleRandom = () => {
+    // TODO: handle random movie query
+  }
+
   const handleLogout = () => {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
@@ -452,6 +467,17 @@ export default function HomeView() {
       setIsLoading(true);
       try {
         await Promise.all([getUserLists(), getUserStats(), checkUserPendency()]);
+
+        const saved = localStorage.getItem('movieSearch');
+        if (saved) {
+          const { searchValue: savedValue, searchResult: savedResults, timestamp } = JSON.parse(saved);
+
+          if (Date.now() - timestamp < 10 * 60 * 1000) {
+            setSearchValue(savedValue);
+            setSearchResult(savedResults);
+            setImagesLoaded(true);
+          }
+        }
       } catch (err) {
         console.error("Error fetching data:", err);
       } finally {
@@ -542,6 +568,7 @@ export default function HomeView() {
                 <Button
                   variant="secondary"
                   className="text-white bg-blue-600 hover:bg-blue-700 flex-1 sm:flex-none"
+                  onClick={handleRandom}
                 >
                   Random
                 </Button>
@@ -563,14 +590,13 @@ export default function HomeView() {
                             className="w-16 h-auto rounded shadow"
                             alt={res.title}
                           />
-
                           <span className="text-white">
-                            <a
-                              href={`${res.link}`}
-                              className="text-blue-300 hover:text-blue-500"
+                            <button
+                              onClick={() => handleMovieClick(res.link)}
+                              className="text-blue-300 hover:text-blue-500 cursor-pointer bg-transparent border-none underline"
                             >
                               {res.title}
-                            </a>{" "}
+                            </button>{" "}
                             - {res.year}
                           </span>
                         </div>
