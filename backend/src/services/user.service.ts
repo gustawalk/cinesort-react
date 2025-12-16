@@ -5,6 +5,7 @@ import { RowDataPacket } from "mysql2";
 import { Movie } from "@/models/movie.model";
 import { Pendency } from "@/models/pendency.model";
 import { UserRate } from "@/models/userrate.model";
+import { WatchedList } from "@/models/watchedlist.model";
 
 type UserStatsResult = { status: "ok", user_stats: UserStats }
 
@@ -122,4 +123,21 @@ export const getRateByMovieId = async (movie_id: string, user_id: number): Promi
   const data = rows[0] as UserRate
 
   return { status: "ok", rate: data.score_movie }
+}
+
+type WatchedResult = | { status: "ok", watchedList: WatchedList[] } | { status: "no_content", watchedList: null }
+
+export const getUserWatched = async (user_id: number): Promise<WatchedResult> => {
+
+  const [rows] = await pool.query<RowDataPacket[]>(
+    "SELECT * FROM watched_movies WHERE id_user = ?", [user_id]
+  )
+
+  if (rows.length === 0) {
+    return { status: "no_content", watchedList: null }
+  }
+
+  const watchedRows = rows as WatchedList[]
+
+  return { status: "ok", watchedList: watchedRows }
 }

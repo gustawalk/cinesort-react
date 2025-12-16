@@ -12,6 +12,8 @@ import showToast from "@/components/ui/toast";
 import { ListEdit } from "@/components/utility/ListEdit";
 import type { ListEditModel } from "@/interfaces/ListEditModel";
 import { appChannel } from "@/utils/broadcast";
+import WatchedList from "@/components/utility/WatchedList";
+import type { WatchedMovies } from "@/interfaces/WatchedMovies";
 
 export interface UserStats {
   lastMovie: {
@@ -70,6 +72,8 @@ export default function HomeView() {
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isWatchedOpen, setIsWatchedOpen] = useState<boolean>(true);
+  const [watchedList, setWatchedList] = useState<WatchedMovies[] | null>(null)
   const [isListEditOpen, setIsListEditOpen] = useState<boolean>(false);
   const [editListMovies, setEditListMovies] = useState<ListEditModel[] | null>(null)
   const [selectedMovie, setSelectedMovie] = useState<MovieInfo | null>(null)
@@ -162,6 +166,24 @@ export default function HomeView() {
     } catch (err) {
       throw err;
     }
+  }
+
+  const getUserWatchedMovies = async () => {
+    const token = checkAuth()
+    if (!token) return;
+
+    const response = await fetch("/api/user/stats/watched", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      }
+    });
+
+    const data = await response.json();
+
+    setWatchedList(data.watchedList)
+    setIsWatchedOpen(true)
   }
 
   const getUserLists = useCallback(async ({ selectLastList = false }: GetUserListsOptions = {}) => {
@@ -425,6 +447,10 @@ export default function HomeView() {
   const handleCloseModal = () => {
     setIsModalOpen(false)
     setSelectedMovie(null)
+  }
+
+  const handleWatchedClose = () => {
+    setIsWatchedOpen(false);
   }
 
   const handleListEditClose = () => {
@@ -738,7 +764,11 @@ export default function HomeView() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-stone-400">Watched Movies</span>
-                  <span className="text-blue-400 hover:text-blue-600">{userStats?.watchedMovies}</span>
+                  <span className="text-blue-400 hover:text-blue-600"
+                    onClick={getUserWatchedMovies}
+                  >
+                    {userStats?.watchedMovies}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-stone-400">Highest Rated</span>
@@ -771,6 +801,14 @@ export default function HomeView() {
           isOpen={isListEditOpen}
           onClose={handleListEditClose}
           handleDelete={handleDeleteFromEdit}
+        />
+      )}
+
+      {isWatchedOpen && watchedList && (
+        <WatchedList
+          watched_list={watchedList}
+          isOpen={isWatchedOpen}
+          onClose={handleWatchedClose}
         />
       )}
     </div>
