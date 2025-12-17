@@ -14,6 +14,8 @@ import type { ListEditModel } from "@/interfaces/ListEditModel";
 import { appChannel } from "@/utils/broadcast";
 import WatchedList from "@/components/utility/WatchedList";
 import type { WatchedMovies } from "@/interfaces/WatchedMovies";
+import { PopularListView } from "@/components/utility/PopularListView";
+import type { MovieDetail } from "@/interfaces/MovieDetail";
 
 export interface UserStats {
   lastMovie: {
@@ -43,6 +45,11 @@ interface UserLists {
   nome_lista: string
 }
 
+interface PopularList {
+  nome_lista: string,
+  id: number
+}
+
 
 const LoadingSpinner = () => (
   <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-500 border-r-transparent"></div>
@@ -70,12 +77,17 @@ export default function HomeView() {
   const [userLists, setUserLists] = useState<UserLists[]>([])
   const [selectedList, setSelectedList] = useState<number | null>(null);
   const [userStats, setUserStats] = useState<UserStats | null>(null);
+  const [selectedPopularName, setSelectedPopularName] = useState<string>("")
+  const [selectedPopularId, setSelectedPopularId] = useState<number | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isPopularListViewOpen, setIsPopularListViewOpen] = useState<boolean>(false)
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [isWatchedOpen, setIsWatchedOpen] = useState<boolean>(true);
+  const [isWatchedOpen, setIsWatchedOpen] = useState<boolean>(false);
   const [watchedList, setWatchedList] = useState<WatchedMovies[] | null>(null)
   const [isListEditOpen, setIsListEditOpen] = useState<boolean>(false);
   const [editListMovies, setEditListMovies] = useState<ListEditModel[] | null>(null)
+  const [popularList, setPopularList] = useState<PopularList[] | null>(null)
+  const [popularListData, setPopularListData] = useState<MovieDetail[] | null>(null)
   const [selectedMovie, setSelectedMovie] = useState<MovieInfo | null>(null)
   const [searchValue, setSearchValue] = useState<string>("");
   const [searchResult, setSearchResult] = useState<MovieSearchResult[]>([])
@@ -168,6 +180,26 @@ export default function HomeView() {
     }
   }
 
+  const getPopularListDetail = async (id: number, list_name: string) => {
+    const token = checkAuth()
+    if (!token) return;
+
+    const response = await fetch(`/api/list/popular/${id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      }
+    });
+
+    const data = await response.json();
+
+    setPopularListData(data.movies)
+    setSelectedPopularName(list_name)
+    setSelectedPopularId(id)
+    setIsPopularListViewOpen(true)
+  }
+
   const getUserWatchedMovies = async () => {
     const token = checkAuth()
     if (!token) return;
@@ -185,6 +217,23 @@ export default function HomeView() {
     setWatchedList(data.watchedList)
     setIsWatchedOpen(true)
   }
+
+  const getPopularLists = async () => {
+    const token = checkAuth()
+    if (!token) return;
+
+    const response = await fetch("/api/list/popular", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      }
+    })
+
+    const data = await response.json();
+    setPopularList(data.popularLists)
+  }
+
 
   const getUserLists = useCallback(async ({ selectLastList = false }: GetUserListsOptions = {}) => {
     try {
@@ -444,6 +493,57 @@ export default function HomeView() {
     })
   }
 
+  const handleImportList = async () => {
+    const token = checkAuth();
+    if (!token) return;
+
+    const response = await fetch("/api/list/import", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({ listId: selectedPopularId })
+    })
+
+    if (response.status === 200) {
+      showToast("success", "List imported")
+      appChannel.postMessage({ type: "LIST_UPDATED" })
+      return;
+    } else if (response.status === 409) {
+      Swal.fire({
+        title: "This list already exists",
+        text: "Try using a different name!",
+        icon: "error",
+        background: "#1c1917",
+        color: "#ffffff",
+        iconColor: "#ef4444",
+        confirmButtonText: "Ok",
+        confirmButtonColor: "#2563eb",
+      });
+      return;
+    } else if (response.status === 403) {
+      Swal.fire({
+        title: "You don't have permission",
+        text: "Try importing a popular list!",
+        icon: "error",
+        background: "#1c1917",
+        color: "#ffffff",
+        iconColor: "#ef4444",
+        confirmButtonText: "Ok",
+        confirmButtonColor: "#2563eb",
+      });
+      return;
+    }
+  }
+
+  const handleClosePopularView = () => {
+    setPopularListData(null)
+    setIsPopularListViewOpen(false)
+    setSelectedPopularId(null)
+    setSelectedPopularName("")
+  }
+
   const handleCloseModal = () => {
     setIsModalOpen(false)
     setSelectedMovie(null)
@@ -528,7 +628,7 @@ export default function HomeView() {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        await Promise.all([getUserLists(), getUserStats(), checkUserPendency()]);
+        await Promise.all([getUserLists(), getUserStats(), checkUserPendency(), getPopularLists()]);
 
         const saved = localStorage.getItem('movieSearch');
         if (saved) {
@@ -617,8 +717,40 @@ export default function HomeView() {
         </Button>
       </div>
 
+      <div className="">
+
+      </div>
+
       {/* Main content area */}
-      <div className="flex-1 flex flex-col lg:flex-row justify-center items-start lg:items-center gap-6 px-4 py-8 lg:py-0">
+
+      <div className="flex-1 flex flex-col lg:flex-row justify-center items-start lg:items-center gap-6 lg:gap-24 px-4 py-8 lg:py-0">
+
+        {/* Left side - Popular Lists */}
+        <div className="w-full max-w-lg lg:max-w-96 order-1 lg:order-none flex flex-col justify-center">
+          <h2 className="text-white text-xl font-semibold mb-4 text-left">Popular Lists</h2>
+          {popularList && Array.isArray(popularList) && (
+            <div>
+              {popularList.map((list) => (
+                <div className="flex flex-col gap-4"
+                  key={list.id}
+                >
+                  <Card
+                    className="bg-stone-800 border-stone-700 rounded-xl shadow-lg hover:bg-stone-750 transition-colors cursor-pointer">
+                    <CardContent className="py-4 flex justify-between items-center">
+                      <span className="text-white text-left font-medium hover:underline">{list.nome_lista}</span>
+                      <Button
+                        className="bg-blue-500 hover:bg-blue-700"
+                        onClick={() => { getPopularListDetail(list.id, list.nome_lista) }}
+                      >
+                        View
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
         {/* Center search card */}
         <Card className="bg-stone-800 border-stone-700 rounded-xl shadow-lg w-full max-w-lg text-center order-1">
           <CardHeader>
@@ -809,6 +941,16 @@ export default function HomeView() {
           watched_list={watchedList}
           isOpen={isWatchedOpen}
           onClose={handleWatchedClose}
+        />
+      )}
+
+      {isPopularListViewOpen && popularListData && (
+        <PopularListView
+          isOpen={isPopularListViewOpen}
+          listName={selectedPopularName}
+          onClose={handleClosePopularView}
+          movies={popularListData}
+          handleImport={handleImportList}
         />
       )}
     </div>

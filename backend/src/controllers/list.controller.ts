@@ -1,5 +1,15 @@
 import { Request, Response } from "express";
-import { getUserLists, createNewList, deleteUserList, drawFromList, addMovieToList, editMoviesLists, deleteMovieFromList } from "@/services/list.service";
+import {
+  getUserLists,
+  createNewList,
+  deleteUserList,
+  drawFromList,
+  addMovieToList,
+  editMoviesLists,
+  deleteMovieFromList,
+  getPopularLists,
+  importMovieListToUser
+} from "@/services/list.service";
 
 type UserListsReturn = "ok" | "no_content";
 
@@ -169,6 +179,82 @@ export const movieDeleteList = async (req: Request, res: Response) => {
 
   const responsesMap: Record<DeleteFromList, () => Response> = {
     deleted: () => res.status(200).json({ message: "Deleted succefully" })
+  }
+
+  if (responsesMap[result.status]) {
+    return responsesMap[result.status]();
+  }
+
+  return res.status(500).json({ message: "Something went wrong" })
+}
+
+type PopularReturn = "ok"
+
+export const popularList = async (req: Request, res: Response) => {
+  const user = req.user;
+
+  if (!user) {
+    return res.status(500).json({ message: "User data missing from request" });
+  }
+
+  const result = await getPopularLists();
+
+  const responsesMap: Record<PopularReturn, () => Response> = {
+    ok: () => res.status(200).json({ message: "ok", popularLists: result.lists })
+  }
+
+  if (responsesMap[result.status]) {
+    return responsesMap[result.status]();
+  }
+
+  return res.status(500).json({ message: "Something went wrong" })
+}
+
+export const popularListDetail = async (req: Request, res: Response) => {
+  const user = req.user;
+
+  if (!user) {
+    return res.status(500).json({ message: "User data missing from request" });
+  }
+
+  const idRaw = req.params.id;
+  const id = Number(idRaw)
+
+  if (isNaN(id)) {
+    return res.status(400).json({ message: "Invalid list UUID" });
+  }
+
+  const result = await editMoviesLists(id, 0)
+
+  const responsesMap: Record<EditStatus, () => Response> = {
+    ok: () => res.status(200).json({ message: "Ok", movies: result.movies }),
+    no_content: () => res.status(204).json({ message: "No movies found", movies: null })
+  }
+
+  if (responsesMap[result.status]) {
+    return responsesMap[result.status]();
+  }
+
+  return res.status(500).json({ message: "Something went wrong" })
+}
+
+type ImportResult = "imported" | "forbidden" | "conflict"
+
+export const importMovieList = async (req: Request, res: Response) => {
+  const user = req.user;
+
+  if (!user) {
+    return res.status(500).json({ message: "User data missing from request" });
+  }
+
+  const { listId } = req.body
+
+  const result = await importMovieListToUser(listId, user.id)
+
+  const responsesMap: Record<ImportResult, () => Response> = {
+    imported: () => res.status(200).json({ message: "Imported" }),
+    forbidden: () => res.status(403).json({ message: "User don't have permission" }),
+    conflict: () => res.status(409).json({ message: "User already has a list with this name" })
   }
 
   if (responsesMap[result.status]) {

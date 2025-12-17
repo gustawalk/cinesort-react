@@ -12,9 +12,16 @@ type DrawResult = | { status: "ok", movie: Movie } | { status: "no_content", mov
 type EditResult = | { status: "ok", movies: ListEdit[] } | { status: "no_content", movies: null }
 type AddResult = | { status: "ok" } | { status: "conflict" }
 type DeleteFromListResult = | { status: "deleted" }
+type PopularListResult = | { status: "ok", lists: PopularList[] }
+type ImportResult = | { status: "imported" } | { status: "conflict" } | { status: "forbidden" }
 
 interface UserIdOnly {
   id: number
+}
+
+interface PopularList {
+  nome_lista: string,
+  uuid: string
 }
 
 const checkUserPendency = async (user_id: number): Promise<boolean> => {
@@ -200,5 +207,78 @@ export const deleteMovieFromList = async (list_id: number, movie_id: string, use
     return { status: "deleted" }
   } catch (err) {
     throw err;
+  }
+}
+
+export const getPopularLists = async (): Promise<PopularListResult> => {
+  try {
+    const [rows] = await pool.query<RowDataPacket[]>(
+      "SELECT nome_lista, id FROM listas WHERE id_user_dono = 0"
+    );
+
+    const lists = rows as PopularList[]
+
+    return { status: "ok", lists: lists }
+  } catch (err) {
+    throw err;
+  }
+}
+
+interface MainList {
+  nome_lista: string;
+}
+
+export const importMovieListToUser = async (list_id: number, user_id: number): Promise<ImportResult> => {
+  const conn = await pool.getConnection();
+
+  try {
+    await conn.beginTransaction()
+
+    const [mainList] = await conn.query<RowDataPacket[]>(
+      "SELECT nome_lista FROM listas WHERE id = ? AND id_user_dono = ?", [list_id, 0]
+    )
+
+
+    if (mainList.length === 0) {
+      await conn.rollback()
+      return { status: "forbidden" }
+    }
+
+    const mainListName = (mainList[0] as MainList).nome_lista
+
+    const [rows] = await conn.query<RowDataPacket[]>(
+      "SELECT 1 FROM listas WHERE id_user_dono = ? AND nome_lista = ?", [user_id, mainListName]
+    )
+
+    if (rows.length !== 0) {
+      await conn.rollback()
+      return { status: "conflict" }
+    }
+
+    const list_uuid = randomUUID();
+
+    const [new_list] = await conn.query<any>(
+      "INSERT INTO listas (id_user_dono, nome_lista, uuid) VALUES (?, ?, ?)", [user_id, mainListName, list_uuid]
+    );
+
+    const new_list_id = new_list.insertId;
+    await conn.query(
+      `
+      INSERT INTO movie_lists (id_lista_origem, movie_imdb_id)
+      SELECT ?, movie_imdb_id
+      FROM movie_lists
+      WHERE id_lista_origem = ?
+      `,
+      [new_list_id, list_id]
+    );
+
+    await conn.commit();
+
+    return { status: "imported" };
+  } catch (err) {
+    await conn.rollback()
+    throw err;
+  } finally {
+    conn.release()
   }
 }
