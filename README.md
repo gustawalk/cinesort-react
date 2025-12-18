@@ -5,8 +5,7 @@ CineSort is a full-stack web application designed for movie enthusiasts to searc
 ## Features
 
 -   **User Authentication:** Secure user registration and login system using JWT.
--   **Movie Search:** Powerful search functionality to discover movies.
--   **Movie Details:** View comprehensive details for any movie.
+-   **Movie Search:** Powerful search functionality to discover movies. **Movie Details:** View comprehensive details for any movie.
 -   **Personalized Lists:** Create, edit, and manage custom movie lists.
 -   **Watched History:** Keep a record of all the movies you've watched.
 
@@ -48,8 +47,8 @@ Follow these steps to get your development environment set up and running.
 ### 1. Clone the Repository
 
 ```bash
-git clone <your-repository-url>
-cd cinesort-react
+git clone https://github.com/gustawalk/cinesort.git
+cd cinesort
 ```
 
 ### 2. Backend Setup
