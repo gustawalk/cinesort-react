@@ -508,12 +508,13 @@ export default function HomeView() {
 
     if (response.status === 200) {
       showToast("success", "List imported")
+      getUserLists();
       appChannel.postMessage({ type: "LIST_UPDATED" })
       return;
     } else if (response.status === 409) {
       Swal.fire({
         title: "This list already exists",
-        text: "Try using a different name!",
+        text: "Try importhing another list!",
         icon: "error",
         background: "#1c1917",
         color: "#ffffff",
@@ -652,7 +653,7 @@ export default function HomeView() {
   useEffect(() => {
     const handler = (event: MessageEvent) => {
       if (event.data?.type === "LIST_UPDATED") {
-        getUserLists();
+        getUserLists({ selectLastList: true });
       } else if (event.data?.type === "EDIT_UPDATE") {
         handleEdit();
       }
@@ -828,7 +829,9 @@ export default function HomeView() {
           <Card className="bg-stone-800 border-stone-700 rounded-xl shadow-lg">
             <CardHeader>
               <div className="flex text-white items-center space-x-2">
-                <span className="text-xl">ⓘ</span>
+                <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="24" height="24" stroke="white" strokeWidth="1" viewBox="0 0 50 50" fill="#ffffff">
+                  <path d="M 25 2 C 12.309295 2 2 12.309295 2 25 C 2 37.690705 12.309295 48 25 48 C 37.690705 48 48 37.690705 48 25 C 48 12.309295 37.690705 2 25 2 z M 25 4 C 36.609824 4 46 13.390176 46 25 C 46 36.609824 36.609824 46 25 46 C 13.390176 46 4 36.609824 4 25 C 4 13.390176 13.390176 4 25 4 z M 25 11 A 3 3 0 0 0 22 14 A 3 3 0 0 0 25 17 A 3 3 0 0 0 28 14 A 3 3 0 0 0 25 11 z M 21 21 L 21 23 L 22 23 L 23 23 L 23 36 L 22 36 L 21 36 L 21 38 L 22 38 L 23 38 L 27 38 L 28 38 L 29 38 L 29 36 L 28 36 L 27 36 L 27 21 L 26 21 L 22 21 L 21 21 z"></path>
+                </svg>
                 <h3 className="font-semibold">User Lists</h3>
               </div>
             </CardHeader>
@@ -883,8 +886,10 @@ export default function HomeView() {
           {/* User Statistics Card */}
           <Card className="bg-stone-800 border-stone-700 rounded-xl shadow-lg">
             <CardHeader>
-              <div className="flex text-white items-center space-x-2">
-                <span className="text-xl">ⓘ</span>
+              <div className="flex text-white items-center space-x-2" title="You can click in the blue text to see more informations">
+                <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="24" height="24" stroke="white" strokeWidth="1" viewBox="0 0 50 50" fill="#ffffff">
+                  <path d="M 25 2 C 12.309295 2 2 12.309295 2 25 C 2 37.690705 12.309295 48 25 48 C 37.690705 48 48 37.690705 48 25 C 48 12.309295 37.690705 2 25 2 z M 25 4 C 36.609824 4 46 13.390176 46 25 C 46 36.609824 36.609824 46 25 46 C 13.390176 46 4 36.609824 4 25 C 4 13.390176 13.390176 4 25 4 z M 25 11 A 3 3 0 0 0 22 14 A 3 3 0 0 0 25 17 A 3 3 0 0 0 28 14 A 3 3 0 0 0 25 11 z M 21 21 L 21 23 L 22 23 L 23 23 L 23 36 L 22 36 L 21 36 L 21 38 L 22 38 L 23 38 L 27 38 L 28 38 L 29 38 L 29 36 L 28 36 L 27 36 L 27 21 L 26 21 L 22 21 L 21 21 z"></path>
+                </svg>
                 <h3 className="font-semibold">User Statistics</h3>
               </div>
             </CardHeader>
@@ -894,10 +899,11 @@ export default function HomeView() {
                   <span className="text-stone-400">Last Movie</span>
                   <MovieLink movie={userStats?.lastMovie}></MovieLink>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-stone-400">Watched Movies</span>
+                <div className="flex justify-between"
+                  onClick={getUserWatchedMovies}
+                >
+                  <span className="text-stone-400 hover:underline">Watched Movies</span>
                   <span className="text-blue-400 hover:text-blue-600"
-                    onClick={getUserWatchedMovies}
                   >
                     {userStats?.watchedMovies}
                   </span>

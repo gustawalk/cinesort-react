@@ -9,11 +9,12 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "packageManager": "pnpm@10.20.0",
+  "packageManager": "pnpm@10.26.1",
   "dependencies": {
     "@types/redis": "^4.0.11",
     "axios": "^1.13.2",
     "bcryptjs": "^3.0.3",
+    "cheerio": "^1.1.2",
     "cors": "^2.8.5",
     "crypt": "^0.0.2",
     "dotenv": "^17.2.3",
