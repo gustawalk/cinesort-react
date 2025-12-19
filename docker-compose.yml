@@ -8,7 +8,7 @@ services:
     environment:
       MARIADB_ROOT_PASSWORD: ${PASSWORD}
       MARIADB_DATABASE: ${DATABASE}
-      MARIADB_USER: ${DBUSER}
+      MARIADB_USER: ${USERDB}
       MARIADB_PASSWORD: ${PASSWORD}
     volumes:
       - db_data:/var/lib/mysql
