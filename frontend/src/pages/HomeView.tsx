@@ -736,7 +736,7 @@ export default function HomeView() {
                   key={list.id}
                 >
                   <Card
-                    className="bg-stone-800 border-stone-700 rounded-xl shadow-lg hover:bg-stone-750 transition-colors cursor-pointer">
+                    className="bg-stone-800 border-stone-700 rounded-xl shadow-lg hover:bg-stone-750 transition-colors cursor-pointer mb-4">
                     <CardContent className="py-4 flex justify-between items-center">
                       <span className="text-white text-left font-medium hover:underline">{list.nome_lista}</span>
                       <Button
