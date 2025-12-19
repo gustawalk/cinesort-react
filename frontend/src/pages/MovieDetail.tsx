@@ -60,7 +60,7 @@ export default function MovieDetail() {
       const token = checkAuth()
       if (!token) return;
 
-      const response = await fetch(`/api/user/rate/${imdb_id}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/user/rate/${imdb_id}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -96,7 +96,7 @@ export default function MovieDetail() {
       const token = checkAuth()
       if (!token) return;
 
-      const response = await fetch("/api/list", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/list`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -166,7 +166,7 @@ export default function MovieDetail() {
     const token = checkAuth();
     if (!token) return;
 
-    const response = await fetch("/api/list", {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/list`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -201,7 +201,7 @@ export default function MovieDetail() {
     const token = checkAuth();
     if (!token) return;
 
-    const request = await fetch(`/api/movie/info/${id}`, {
+    const request = await fetch(`${import.meta.env.VITE_API_URL}/api/movie/info/${id}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -235,7 +235,7 @@ export default function MovieDetail() {
     setAddButtonDisabled(true)
 
     try {
-      const request = await fetch("/api/list/movie/add", {
+      const request = await fetch(`${import.meta.env.VITE_API_URL}/api/list/movie/add`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

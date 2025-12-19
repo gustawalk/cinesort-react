@@ -1,0 +1,49 @@
+services:
+  db:
+    image: mariadb:11
+    container_name: cinesort-db
+    restart: unless-stopped
+    env_file:
+      - ./.env
+    environment:
+      MARIADB_ROOT_PASSWORD: ${PASSWORD}
+      MARIADB_DATABASE: ${DATABASE}
+      MARIADB_USER: ${DBUSER}
+      MARIADB_PASSWORD: ${PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "3307:3306"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cinesort-backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      HOST: db
+      DB_HOST: db
+      DB_PORT: 3306
+    depends_on:
+      - db
+    ports:
+      - "6700:6700"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: cinesort-frontend
+    restart: unless-stopped
+    env_file:
+      - ./frontend/.env
+    depends_on:
+      - backend
+    ports:
+      - "5173:4173"
+
+volumes:
+  db_data:

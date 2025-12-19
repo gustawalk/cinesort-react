@@ -139,7 +139,7 @@ export default function HomeView() {
     try {
       const token = checkAuth()
 
-      const response = await fetch("/api/user/stats", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/user/stats`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -161,7 +161,7 @@ export default function HomeView() {
       const token = checkAuth()
       if (!token) return;
 
-      const response = await fetch("/api/user/pendency", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/user/pendency`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -184,7 +184,7 @@ export default function HomeView() {
     const token = checkAuth()
     if (!token) return;
 
-    const response = await fetch(`/api/list/popular/${id}`, {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/list/popular/${id}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -204,7 +204,7 @@ export default function HomeView() {
     const token = checkAuth()
     if (!token) return;
 
-    const response = await fetch("/api/user/stats/watched", {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/user/stats/watched`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -222,7 +222,7 @@ export default function HomeView() {
     const token = checkAuth()
     if (!token) return;
 
-    const response = await fetch("/api/list/popular", {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/list/popular`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -240,7 +240,7 @@ export default function HomeView() {
       const token = checkAuth()
       if (!token) return;
 
-      const response = await fetch("/api/list", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/list`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -300,7 +300,7 @@ export default function HomeView() {
     const token = checkAuth();
     if (!token) return;
 
-    const response = await fetch("/api/list/movie/delete", {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/list/movie/delete`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -330,7 +330,7 @@ export default function HomeView() {
     setIsLoadingSearch(true)
     setSearchResult([])
 
-    const response = await fetch(`/api/movie/search/${searchValue}`, {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/movie/search/${searchValue}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -385,7 +385,7 @@ export default function HomeView() {
     const token = checkAuth();
     if (!token) return;
 
-    const response = await fetch("/api/list", {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/list`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -416,7 +416,7 @@ export default function HomeView() {
     const token = checkAuth();
     if (!token) return;
 
-    const response = await fetch(`/api/list/${selectedList}/edit`, {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/list/${selectedList}/edit`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -432,7 +432,7 @@ export default function HomeView() {
   const handleDraw = async () => {
     const token = checkAuth();
     if (!token) return;
-    const response = await fetch(`/api/list/${selectedList}/draw`, {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/list/${selectedList}/draw`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -475,7 +475,7 @@ export default function HomeView() {
       cancelButtonColor: "#d33"
     }).then(async (result) => {
       if (result.isConfirmed) {
-        const response = await fetch("/api/list", {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/list`, {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
@@ -497,7 +497,7 @@ export default function HomeView() {
     const token = checkAuth();
     if (!token) return;
 
-    const response = await fetch("/api/list/import", {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/list/import`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -562,7 +562,7 @@ export default function HomeView() {
     const token = checkAuth();
     if (!token) return;
 
-    const response = await fetch("/api/movie/rate", {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/movie/rate`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -597,7 +597,7 @@ export default function HomeView() {
       cancelButtonColor: "#d33"
     }).then(async (result) => {
       if (result.isConfirmed) {
-        const response = await fetch("/api/movie/random", {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/movie/random`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
