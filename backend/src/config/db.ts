@@ -3,14 +3,14 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const { HOST, USERDB, PASSWORD, DATABASE } = process.env;
+const { DB_HOST, USERDB, PASSWORD, DATABASE } = process.env;
 
-if (!HOST || !USERDB || !PASSWORD || !DATABASE) {
+if (!DB_HOST || !USERDB || !PASSWORD || !DATABASE) {
   throw new Error("Missing one or more required DB environment variables");
 }
 
 export const pool = mysql.createPool({
-  host: HOST,
+  host: DB_HOST,
   user: USERDB,
   password: PASSWORD,
   database: DATABASE,
