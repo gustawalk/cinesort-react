@@ -2,19 +2,27 @@ import { User } from "@/models/user.model";
 import { pool } from "@/config/db";
 import { compareHashPassword, hashPassword } from "@/utils/password";
 import { validateEmail } from "@/utils/email";
+import { RowDataPacket } from "mysql2";
 
 type LoginResult = | { status: "ok", user: User } | { status: "notfound" } | { status: "error", message: string, code?: number }
 
 export const loginUser = async (username: string, password: string): Promise<LoginResult> => {
   try {
-    let [rows] = await pool.query("SELECT * FROM usuarios WHERE nome_user = ?", [username]);
+    let [rows] = await pool.query<RowDataPacket[]>("SELECT * FROM usuarios WHERE nome_user = ?", [username]);
 
     if ((rows as any[]).length <= 0) {
       return { status: "notfound" }
     }
 
-    const user = (rows as any[])[0];
-    const password_check = await compareHashPassword(password, user.senha_user);
+    if (!rows[0]?.senha_user) return { status: "notfound" }
+
+    const user: User = {
+      id: rows[0].id,
+      nome_user: rows[0].nome_user,
+      email_user: rows[0].email_user
+    }
+
+    const password_check = await compareHashPassword(password, rows[0].senha_user);
 
     if (!password_check) {
       return { status: "notfound" }
