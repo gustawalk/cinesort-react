@@ -18,7 +18,7 @@ export const MovieLink = ({ movie }: { movie?: { name_movie: string; id_movie: s
       className="text-blue-400 hover:text-blue-600 cursor-pointer"
       onClick={() => navigate(`/movie/${movie.id_movie}`)}
     >
-      {truncate(movie.name_movie, 23)}
+      {truncate(movie.name_movie, 20)}
     </span>
   );
 };
