@@ -1,9 +1,7 @@
 
-FROM node:20-alpine
+FROM node:20-alpine AS build
 
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
-
+RUN corepack enable && corepack prepare pnpm@10 --activate
 WORKDIR /app
 
 COPY package.json pnpm-lock.yaml ./
