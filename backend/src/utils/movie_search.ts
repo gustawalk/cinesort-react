@@ -90,43 +90,66 @@ export const search_movie_on_db = async (id_filme: string): Promise<Movie> => {
   }
 }
 
-export const search_movie_on_tmdb = async (movie_name: string): Promise<SearchTemplate[]> => {
+export const search_movie_on_tmdb = async (
+  movie_name: string
+): Promise<SearchTemplate[]> => {
   try {
-    const url = `https://www.themoviedb.org/search/movie?query=${encodeURIComponent(movie_name)}`;
+    const url = `https://www.themoviedb.org/search/movie?query=${encodeURIComponent(movie_name)}`
+
     const { data: html } = await axios.get(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0',
-        "Accept-Language": "en-US,en;q=0.9"
-      }
-    });
-
-    const $ = cheerio.load(html);
-    const resultados: SearchTemplate[] = []
-
-    $('.card.v4.tight').each((_, el) => {
-      const container = $(el);
-
-      const title = container.find('h2').first().text().trim();
-      const link = container.find('a.result').first().attr('href');
-      const mediaType = container.find('a.result').attr('data-media-type');
-      const releaseDateRaw = container.find('.release_date').first().text().trim();
-      const year = releaseDateRaw.match(/\d{4}/)?.[0];
-      const image = container.find('.poster.w-full').attr('src');
-
-      if (!title || !link || !year || !image) return
-
-      if (mediaType == "movie") {
-        resultados.push({
-          title,
-          year,
-          link,
-          image
-        })
+        'Accept-Language': 'en-US,en;q=0.9'
       }
     })
 
-    return resultados;
-  } catch (err) {
-    return [];
+    const $ = cheerio.load(html)
+
+    const resultados: SearchTemplate[] = []
+
+    $('.search_results.movie .comp\\:media-card').each((_, el) => {
+      const container = $(el)
+
+      const title = container
+        .find('h2')
+        .first()
+        .text()
+        .trim()
+
+      const releaseDate = container
+        .find('.release_date')
+        .first()
+        .text()
+        .trim()
+
+      const year = releaseDate.match(/\d{4}/)?.[0]
+
+      const movieLink = container
+        .find('a[data-media-type="movie"]')
+        .first()
+
+      const link = movieLink.attr('href')
+
+      const image = container
+        .find('img.poster')
+        .first()
+        .attr('src')
+
+      if (!title || !year || !link || !image) {
+        return
+      }
+
+      resultados.push({
+        title,
+        year,
+        link,
+        image
+      })
+    })
+
+    return resultados
+  } catch (error) {
+    console.error(error)
+    return []
   }
 }
